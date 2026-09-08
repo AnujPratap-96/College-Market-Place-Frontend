@@ -6,7 +6,7 @@ const AuthLayout = () => {
   const location = useLocation();
   const path = location.pathname.split("/")[2] || "login";
 
-  const hideTabsOn = ["verify-otp", "complete-signup"];
+  const hideTabsOn = ["verify-otp", "complete-signup", "thank-you", "forgot-password", "reset-otp", "reset-password"];
   const shouldShowTabs = !hideTabsOn.includes(path);
 
   return (

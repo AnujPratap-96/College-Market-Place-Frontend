@@ -27,6 +27,8 @@ type SignupFormData = {
 const SignupForm = () => {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
+  const [serverError, setServerError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const {
     register,
@@ -36,26 +38,39 @@ const SignupForm = () => {
   } = useForm<SignupFormData>()
 
   const onSubmit = async (data: SignupFormData) => {
-    
-    try{
-     const response = await Axios.post("/api/user/complete-signup" , {data});
-     if(response.status === 200){
-      navigate("/auth/thank-you");
-     }
+    const token = localStorage.getItem("signupToken")
+    if (!token) {
+      navigate("/auth/signup")
+      return
     }
-    catch(error){
-      console.log(error)
+    setServerError("")
+    setLoading(true)
+    try {
+      const response = await Axios.post(
+        "/user/complete-signup",
+        { ...data },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (response.status === 200) {
+        localStorage.removeItem("signupToken")
+        navigate("/auth/thank-you")
+      }
+    } catch (error: any) {
+      setServerError(
+        error?.response?.data?.error || error?.response?.data?.message || "Signup failed. Please try again."
+      )
+    } finally {
+      setLoading(false)
     }
-   
   }
 
   return (
-    <section className=" flex items-center justify-center  px-4 py-10">
+    <section className="flex items-center justify-center px-4 py-10">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-8"
+        className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-xl p-8"
       >
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold leading-tight">
@@ -70,7 +85,6 @@ const SignupForm = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"
         >
-          {/* Full Name */}
           <div className="flex flex-col gap-1">
             <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
             <Input
@@ -83,7 +97,6 @@ const SignupForm = () => {
             {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
 
-          {/* Password */}
           <div className="flex flex-col gap-1 relative">
             <Label htmlFor="password" className="text-base font-medium">Password</Label>
             <Input
@@ -107,7 +120,6 @@ const SignupForm = () => {
             )}
           </div>
 
-          {/* College */}
           <div className="flex flex-col gap-1">
             <Label htmlFor="college" className="text-base font-medium">College</Label>
             <Input
@@ -122,7 +134,6 @@ const SignupForm = () => {
             )}
           </div>
 
-          {/* Branch */}
           <div className="flex flex-col gap-1">
             <Label htmlFor="branch" className="text-base font-medium">Branch</Label>
             <Input
@@ -137,10 +148,9 @@ const SignupForm = () => {
             )}
           </div>
 
-          {/* Year */}
-          <div className="flex flex-col gap-1 ">
+          <div className="flex flex-col gap-1">
             <Label htmlFor="year" className="text-base font-medium">Year</Label>
-            <Select onValueChange={(val) => setValue("year", val)}>
+            <Select onValueChange={(val) => setValue("year", val, { shouldValidate: true })}>
               <SelectTrigger className="text-base">
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>
@@ -154,7 +164,6 @@ const SignupForm = () => {
             {errors.year && <p className="text-red-500 text-sm">Year is required</p>}
           </div>
 
-          {/* Phone */}
           <div className="flex flex-col gap-1">
             <Label htmlFor="phone" className="text-base font-medium">Phone</Label>
             <Input
@@ -175,14 +184,20 @@ const SignupForm = () => {
             )}
           </div>
 
-          {/* Submit Button */}
+          {serverError && (
+            <div className="col-span-full">
+              <p className="text-red-500 text-sm text-center">{serverError}</p>
+            </div>
+          )}
+
           <div className="col-span-full pt-4">
             <Button
               size="lg"
               type="submit"
+              disabled={loading}
               className="w-full text-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white py-3"
             >
-              Sign Up
+              {loading ? "Creating Account..." : "Sign Up"}
             </Button>
           </div>
         </form>

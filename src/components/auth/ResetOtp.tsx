@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Axios from "@/utils/Axios";
 
 const OTP_LENGTH = 6;
 
-export default function OtpInput() {
+const ResetOtp = () => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,23 +14,19 @@ export default function OtpInput() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("signupToken");
-    if (!token) {
-      navigate("/auth/signup");
-    }
+    const token = localStorage.getItem("resetToken");
+    if (!token) navigate("/auth/forgot-password");
   }, [navigate]);
 
-  const isAllDigitsFilled = otp.every((digit) => /^\d$/.test(digit));
+  const isAllFilled = otp.every((d) => /^\d$/.test(d));
 
   const handleChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
     setErrorMessage("");
-    const updatedOtp = [...otp];
-    updatedOtp[index] = value;
-    setOtp(updatedOtp);
-    if (value && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    const updated = [...otp];
+    updated[index] = value;
+    setOtp(updated);
+    if (value && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -42,36 +38,35 @@ export default function OtpInput() {
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const data = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
-    const updatedOtp = Array(OTP_LENGTH).fill("");
-    for (let i = 0; i < data.length; i++) {
-      updatedOtp[i] = data[i];
-    }
-    setOtp(updatedOtp);
+    const updated = Array(OTP_LENGTH).fill("");
+    for (let i = 0; i < data.length; i++) updated[i] = data[i];
+    setOtp(updated);
     inputRefs.current[data.length - 1]?.focus();
   };
 
   const handleSubmit = async () => {
-    const enteredOtp = otp.join("");
-    if (!isAllDigitsFilled) {
-      setErrorMessage("Please fill in all 6 digits with valid numbers.");
+    if (!isAllFilled) {
+      setErrorMessage("Please fill in all 6 digits.");
       return;
     }
 
-    const token = localStorage.getItem("signupToken");
+    const token = localStorage.getItem("resetToken");
     if (!token) {
-      navigate("/auth/signup");
+      navigate("/auth/forgot-password");
       return;
     }
 
     setLoading(true);
     try {
       const response = await Axios.post(
-        "/user/verify-otp",
-        { otp: enteredOtp },
+        "/user/verify-reset-otp",
+        { otp: otp.join("") },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status === 200) {
-        navigate("/auth/complete-signup");
+        const newToken = response.data?.token;
+        if (newToken) localStorage.setItem("resetToken", newToken);
+        navigate("/auth/reset-password");
       }
     } catch (error: any) {
       setErrorMessage(
@@ -83,11 +78,13 @@ export default function OtpInput() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg text-center">
-      <h2 className="text-2xl font-bold mb-2 text-foreground">Enter your OTP</h2>
-      <p className="text-sm text-muted-foreground mb-6">We sent a 6-digit code to your email</p>
+    <div className="max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg text-center space-y-4">
+      <h2 className="text-2xl font-bold text-foreground">Enter Reset OTP</h2>
+      <p className="text-sm text-muted-foreground">
+        We sent a 6-digit code to your email. It expires in 5 minutes.
+      </p>
 
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex justify-center gap-2">
         {otp.map((digit, index) => (
           <Input
             key={index}
@@ -104,18 +101,18 @@ export default function OtpInput() {
         ))}
       </div>
 
-      {errorMessage && (
-        <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
-      )}
+      {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
 
       <Button
         size="lg"
         className="bg-orange-500 hover:bg-orange-600 text-white w-full"
         onClick={handleSubmit}
-        disabled={!isAllDigitsFilled || loading}
+        disabled={!isAllFilled || loading}
       >
-        {loading ? "Verifying..." : "Submit OTP"}
+        {loading ? "Verifying..." : "Verify OTP"}
       </Button>
     </div>
   );
-}
+};
+
+export default ResetOtp;

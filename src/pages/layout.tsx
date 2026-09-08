@@ -14,12 +14,12 @@ const Layout = () => {
   const reFetchUser = async () => {
     const success = await fetchUser();
     if (success) {
-      navigate("/home");
+      navigate("/dashboard");
     }
 
   }
   useEffect(() => {
-    if (user.isLoggedIn) navigate("/home");
+    if (user.isLoggedIn) navigate("/dashboard");
     else {
       reFetchUser();
     }

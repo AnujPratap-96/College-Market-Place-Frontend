@@ -17,22 +17,31 @@ import { useNavigate } from "react-router-dom"
 import { useDispatch } from "react-redux";
 import { clearUser } from "@/store/userSlice"
 import Axios from "@/utils/Axios"
+import { useState } from "react"
 
 const Header = () => {
   const user = useSelector((state: RootState) => state.user)
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [search, setSearch] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (search.trim()) {
+      navigate(`/dashboard?q=${encodeURIComponent(search.trim())}`);
+    }
+  };
 
   const handleClick = () => {
-    if (user) {
-      navigate("/home")
+    if (user.isLoggedIn) {
+      navigate("/dashboard")
       return;
     };
     navigate("/");
   }
     const logout = async () => {
     try {
-      await Axios.post("/api/user/logout"); // or just "/auth/logout"
+      await Axios.post("/user/logout");
       dispatch(clearUser()); // Clear user in Redux
       navigate("/auth/login"); // Redirect to login
     } catch (error) {
@@ -59,8 +68,9 @@ const Header = () => {
       {/* Center: Search bar with animation */}
       <AnimatePresence>
         {user.isLoggedIn && (
-          <motion.div
+          <motion.form
             key="search"
+            onSubmit={handleSearch}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -70,16 +80,19 @@ const Header = () => {
             <Input
               type="text"
               placeholder="Search items..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="pl-4 pr-10 h-10 rounded-md border-orange-400 focus-visible:ring-orange-400"
             />
             <Button
+              type="submit"
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1/2 -translate-y-1/2 text-orange-400"
             >
               <AiOutlineSearch size={20} />
             </Button>
-          </motion.div>
+          </motion.form>
         )}
       </AnimatePresence>
 

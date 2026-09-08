@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import Axios from "@/utils/Axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import useFetchUser from "@/hooks/useFetchUser";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
@@ -16,31 +16,48 @@ const LoginForm = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { fetchUser } = useFetchUser();
+
+  const successMessage = (location.state as any)?.message || "";
 
   const onSubmit = async (data: FormValues) => {
     setServerError("");
+    setLoading(true);
     try {
-      const response = await Axios.post("/api/user/login", data);
+      const response = await Axios.post("/user/login", data);
       if (response.status === 200) {
         const success = await fetchUser();
-        if (success) navigate("/home");
+        if (success) navigate("/dashboard");
       }
     } catch (error: any) {
       setServerError(
-        error?.response?.data?.message || "Invalid email or password"
+        error?.response?.data?.error || error?.response?.data?.message || "Invalid email or password"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+    <form
+      className="space-y-4 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-700 max-w-md mx-auto"
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      {successMessage && (
+        <p className="text-sm text-green-500 text-center bg-green-500/10 p-2 rounded-lg">
+          {successMessage}
+        </p>
+      )}
+
       <div>
         <Input
           type="email"
           placeholder="Email"
+          className="bg-white dark:bg-zinc-800"
           {...register("email", {
             required: "Email is required",
             pattern: {
@@ -58,6 +75,7 @@ const LoginForm = () => {
         <Input
           type={showPassword ? "text" : "password"}
           placeholder="Password"
+          className="bg-white dark:bg-zinc-800"
           {...register("password", {
             required: "Password is required",
             minLength: {
@@ -77,12 +95,21 @@ const LoginForm = () => {
         )}
       </div>
 
+      <div className="flex justify-end">
+        <Link
+          to="/auth/forgot-password"
+          className="text-sm text-orange-500 hover:text-orange-600 hover:underline transition-colors"
+        >
+          Forgot password?
+        </Link>
+      </div>
+
       {serverError && (
         <p className="text-sm text-red-500 text-center">{serverError}</p>
       )}
 
-      <Button type="submit" className="w-full">
-        Login
+      <Button type="submit" disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+        {loading ? "Logging in..." : "Login"}
       </Button>
     </form>
   );

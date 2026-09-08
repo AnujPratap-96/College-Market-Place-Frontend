@@ -12,26 +12,26 @@ type FormValues = {
 const VerifyEmail = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
   const [serverError, setServerError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const verifyEmail = async (email: string) => {
+  const onSubmit = async (data: FormValues) => {
     setServerError("");
+    setLoading(true);
     try {
-      const response = await Axios.post("/api/user/signup-email", { email });
+      const response = await Axios.post("/user/signup-email", { email: data.email });
       if (response.status === 200) {
         const token = response?.data?.token;
-        localStorage.setItem("signupToken", token);
+        if (token) localStorage.setItem("signupToken", token);
         navigate("/auth/verify-otp");
       }
     } catch (error: any) {
       setServerError(
-        error?.response?.data?.message || "Failed to send OTP. Please try again."
+        error?.response?.data?.message || error?.response?.data?.error || "Failed to send OTP. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const onSubmit = (data: FormValues) => {
-    verifyEmail(data.email);
   };
 
   return (
@@ -57,8 +57,13 @@ const VerifyEmail = () => {
         <p className="text-sm text-red-500 text-center">{serverError}</p>
       )}
 
-      <Button type="submit" className="w-full">
-        Send OTP
+      <Button
+        size="lg"
+        type="submit"
+        disabled={loading}
+        className="w-full text-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white py-3"
+      >
+        {loading ? "Sending OTP..." : "Send OTP"}
       </Button>
     </form>
   );
