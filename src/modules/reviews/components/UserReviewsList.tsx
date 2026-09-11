@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Star, MessageSquare, User, Loader2 } from 'lucide-react';
-import { IReview, ITrustMetrics } from '../review.types';
+import type { IReview, ITrustMetrics } from '../review.types';
 import { fetchUserReviews, fetchProductReviews } from '../review.api';
 import { TrustScoreBadge } from './TrustScoreBadge';
 

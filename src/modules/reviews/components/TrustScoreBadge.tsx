@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star, ShieldCheck, Heart, Award } from 'lucide-react';
-import { ITrustMetrics } from '../review.types';
+import type { ITrustMetrics } from '../review.types';
 
 interface TrustScoreBadgeProps {
   metrics?: Partial<ITrustMetrics> | null;

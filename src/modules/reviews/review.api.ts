@@ -1,5 +1,5 @@
 import Axios from '@/utils/Axios';
-import { IReview, ITrustMetrics, IPendingReview, CreateReviewInput } from './review.types';
+import type { IReview, ITrustMetrics, IPendingReview, CreateReviewInput } from './review.types';
 
 export const submitReview = async (data: CreateReviewInput): Promise<{ review: IReview; trustMetrics: ITrustMetrics }> => {
   const response = await Axios.post('/reviews', data);
