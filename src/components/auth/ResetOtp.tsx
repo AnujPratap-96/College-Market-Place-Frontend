@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ArrowLeft } from "lucide-react";
 import Axios from "@/utils/Axios";
 
 const OTP_LENGTH = 6;
@@ -9,20 +10,35 @@ const OTP_LENGTH = 6;
 const ResetOtp = () => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [errorMessage, setErrorMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const [userEmail, setUserEmail] = useState("");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("resetToken");
-    if (!token) navigate("/auth/forgot-password");
+    const email = localStorage.getItem("resetEmail");
+    if (email) setUserEmail(email);
+    if (!token && !email) navigate("/auth/forgot-password");
   }, [navigate]);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   const isAllFilled = otp.every((d) => /^\d$/.test(d));
 
   const handleChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
     setErrorMessage("");
+    setInfoMessage("");
     const updated = [...otp];
     updated[index] = value;
     setOtp(updated);
@@ -42,6 +58,31 @@ const ResetOtp = () => {
     for (let i = 0; i < data.length; i++) updated[i] = data[i];
     setOtp(updated);
     inputRefs.current[data.length - 1]?.focus();
+  };
+
+  const handleResend = async () => {
+    if (countdown > 0 || resending) return;
+    const email = localStorage.getItem("resetEmail");
+    if (!email) {
+      navigate("/auth/forgot-password");
+      return;
+    }
+    setResending(true);
+    setErrorMessage("");
+    setInfoMessage("");
+    try {
+      const response = await Axios.post("/user/forgot-password", { email });
+      const newToken = response.data?.data?.token || response.data?.token;
+      if (newToken) localStorage.setItem("resetToken", newToken);
+      setCountdown(60);
+      setInfoMessage("A new OTP has been sent to your email.");
+    } catch (error: any) {
+      setErrorMessage(
+        error?.response?.data?.message || error?.response?.data?.error || "Failed to resend OTP. Please wait."
+      );
+    } finally {
+      setResending(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -64,14 +105,16 @@ const ResetOtp = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status === 200) {
-        const newToken = response.data?.token;
+        const newToken = response.data?.data?.token || response.data?.token;
         if (newToken) localStorage.setItem("resetToken", newToken);
         navigate("/auth/reset-password");
       }
     } catch (error: any) {
       setErrorMessage(
-        error?.response?.data?.error || error?.response?.data?.message || "Invalid OTP. Please try again."
+        error?.response?.data?.message || error?.response?.data?.error || "Invalid OTP. Please try again."
       );
+      setOtp(Array(OTP_LENGTH).fill(""));
+      inputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
@@ -81,8 +124,19 @@ const ResetOtp = () => {
     <div className="max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg text-center space-y-4">
       <h2 className="text-2xl font-bold text-foreground">Enter Reset OTP</h2>
       <p className="text-sm text-muted-foreground">
-        We sent a 6-digit code to your email. It expires in 5 minutes.
+        We sent a 6-digit code to{" "}
+        <span className="font-medium text-orange-500">{userEmail || "your email"}</span>
       </p>
+      <div>
+        <button
+          type="button"
+          onClick={() => navigate("/auth/forgot-password")}
+          className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+        >
+          <ArrowLeft size={12} />
+          Change email address
+        </button>
+      </div>
 
       <div className="flex justify-center gap-2">
         {otp.map((digit, index) => (
@@ -95,12 +149,15 @@ const ResetOtp = () => {
             onChange={(e) => handleChange(e.target.value, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             onPaste={handlePaste}
-            ref={(el) => (inputRefs.current[index] = el)}
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
             className="h-12 w-12 text-center text-lg font-semibold"
           />
         ))}
       </div>
 
+      {infoMessage && <p className="text-emerald-500 text-sm">{infoMessage}</p>}
       {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
 
       <Button
@@ -111,6 +168,18 @@ const ResetOtp = () => {
       >
         {loading ? "Verifying..." : "Verify OTP"}
       </Button>
+
+      <div className="flex items-center justify-between text-sm pt-2">
+        <span className="text-muted-foreground">Didn't receive the code?</span>
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={countdown > 0 || resending}
+          className="text-orange-500 hover:text-orange-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {resending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+        </button>
+      </div>
     </div>
   );
 };

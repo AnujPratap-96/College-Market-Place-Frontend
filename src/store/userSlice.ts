@@ -9,6 +9,7 @@ interface UserState {
   college: string
   branch: string
   year: string
+  role?: string
   photoUrl?: string
   isLoggedIn: boolean
 }
@@ -21,6 +22,7 @@ const initialState: UserState = {
   college: '',
   branch: '',
   year: '',
+  role: 'USER',
   photoUrl: '',
   isLoggedIn: false,
 }
@@ -39,11 +41,12 @@ const userSlice = createSlice({
         college: string
         branch: string
         year: string
+        role?: string
         photoUrl?: string
       }>
     ) => {
       const {
-        id, name, phone, email, college, branch, year, photoUrl,
+        id, name, phone, email, college, branch, year, role, photoUrl,
       } = action.payload
 
       state.id = id
@@ -53,6 +56,7 @@ const userSlice = createSlice({
       state.college = college
       state.branch = branch
       state.year = year
+      state.role = role || 'USER'
       state.photoUrl = photoUrl
       state.isLoggedIn = true
     },

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Save, X, User, Mail, Phone, GraduationCap, Edit2 } from "lucide-react";
 import type { RootState } from "@/store/store";
+import { setUser } from "@/store/userSlice";
+import { ImageUploader } from "@/components/ui/ImageUploader";
 import { fetchUserProfile, updateUserProfile, type IUserProfile } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/card";
 
 const Profile = () => {
+  const dispatch = useDispatch();
   const reduxUser = useSelector((state: RootState) => state.user);
   const [profile, setProfile] = useState<IUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,19 @@ const Profile = () => {
     if (result.success) {
       setSuccess(true);
       setEditing(false);
+      dispatch(
+        setUser({
+          id: reduxUser.id,
+          name: form.name,
+          email: reduxUser.email,
+          phone: form.phoneNo,
+          college: form.college,
+          branch: form.branch,
+          year: form.year,
+          role: reduxUser.role,
+          photoUrl: form.image,
+        })
+      );
     } else {
       setError(result.error || "Failed to update profile");
     }
@@ -121,20 +136,24 @@ const Profile = () => {
     <div className="max-w-2xl mx-auto space-y-6">
       <Card>
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4 relative">
-            <Avatar className="w-32 h-32 border-4 border-primary">
-              <AvatarImage src={form.image} />
-              <AvatarFallback className="text-3xl">
-                {form.name.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
+          <div className="flex flex-col items-center justify-center mb-4">
+            <ImageUploader
+              circle
+              folder="avatars"
+              value={form.image}
+              onChange={(url) => {
+                setForm((prev) => ({ ...prev, image: url }));
+                setEditing(true);
+                setSuccess(false);
+              }}
+            />
+            <span className="text-[11px] text-muted-foreground mt-2">Click or drag image to update avatar</span>
           </div>
           <CardTitle className="text-2xl">{form.name}</CardTitle>
           <CardDescription>{reduxUser.email}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -149,7 +168,6 @@ const Profile = () => {
               />
             </div>
 
-            {/* Email (read-only) */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
@@ -162,7 +180,6 @@ const Profile = () => {
               />
             </div>
 
-            {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phoneNo" className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
@@ -178,7 +195,6 @@ const Profile = () => {
               />
             </div>
 
-            {/* College */}
             <div className="space-y-2">
               <Label htmlFor="college" className="flex items-center gap-2">
                 <GraduationCap className="w-4 h-4" />
@@ -194,7 +210,6 @@ const Profile = () => {
               />
             </div>
 
-            {/* Messages */}
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                 {error}
@@ -206,7 +221,6 @@ const Profile = () => {
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex gap-3 pt-4">
               {editing ? (
                 <>

@@ -118,7 +118,22 @@ const ResetPassword = () => {
         </div>
 
         {serverError && (
-          <p className="text-sm text-red-500 text-center">{serverError}</p>
+          <div className="space-y-2 text-center">
+            <p className="text-sm text-red-500">{serverError}</p>
+            {(serverError.toLowerCase().includes("expired") ||
+              serverError.toLowerCase().includes("unauthorized") ||
+              serverError.toLowerCase().includes("token")) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/auth/forgot-password")}
+                className="text-xs cursor-pointer"
+              >
+                Request New Reset OTP
+              </Button>
+            )}
+          </div>
         )}
 
         <Button

@@ -1,21 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, RefreshCw } from "lucide-react";
 import Axios from "@/utils/Axios";
 
 type FormValues = { email: string };
 
 const ForgotPassword = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+  const defaultEmail = typeof window !== "undefined" ? localStorage.getItem("resetEmail") || "" : "";
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    defaultValues: { email: defaultEmail },
+  });
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [retryCooldown, setRetryCooldown] = useState(0);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (retryCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setRetryCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [retryCooldown]);
+
   const onSubmit = async (data: FormValues) => {
+    if (retryCooldown > 0) return;
     setServerError("");
     setLoading(true);
     try {
@@ -23,12 +36,16 @@ const ForgotPassword = () => {
       if (response.status === 200) {
         const token = response.data?.token;
         if (token) localStorage.setItem("resetToken", token);
+        localStorage.setItem("resetEmail", data.email);
         navigate("/auth/reset-otp");
       }
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.error || error?.response?.data?.message || "Something went wrong."
-      );
+      const msg =
+        error?.response?.data?.message || error?.response?.data?.error || "Something went wrong.";
+      setServerError(msg);
+      if (error?.response?.status === 429 || msg.toLowerCase().includes("recently sent")) {
+        setRetryCooldown(60);
+      }
     } finally {
       setLoading(false);
     }
@@ -73,10 +90,19 @@ const ForgotPassword = () => {
 
         <Button
           type="submit"
-          disabled={loading}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+          disabled={loading || retryCooldown > 0}
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 cursor-pointer"
         >
-          {loading ? "Sending OTP..." : "Send Reset OTP"}
+          {loading ? (
+            "Sending OTP..."
+          ) : retryCooldown > 0 ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Retry in {retryCooldown}s
+            </>
+          ) : (
+            "Send Reset OTP"
+          )}
         </Button>
       </form>
 

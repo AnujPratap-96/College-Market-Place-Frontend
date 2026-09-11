@@ -19,6 +19,7 @@ const useFetchUser = () => {
         branch: data.branch,
         year: data.year,
         phone: data.phone,
+        role: data.role,
         photoUrl: data.profileImage || data.image || "",
       }));
       return true;

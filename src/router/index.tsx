@@ -3,7 +3,7 @@ import Auth from "@/pages/auth";
 import LoginForm from "@/components/auth/LoginForm";
 import VerifyEmail from "@/components/auth/VerifyEmail";
 import Home from "@/pages/Home";
-import DashboardLayout from "@/pages/DashboardLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 import Layout from "@/pages/layout";
 import OtpInput from "@/components/auth/OtpInput";
 import LandingPage from "@/pages/LandingPage";
@@ -18,6 +18,10 @@ import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 import ForgotPassword from "@/components/auth/ForgotPassword";
 import ResetOtp from "@/components/auth/ResetOtp";
 import ResetPassword from "@/components/auth/ResetPassword";
+import Subscriptions from "@/pages/Subscriptions";
+import Messages from "@/pages/Messages";
+import Auctions from "@/pages/Auctions";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 const router = createBrowserRouter([
   {
@@ -54,7 +58,11 @@ const router = createBrowserRouter([
       { path: "products/create", element: <CreateListing /> },
       { path: "products/:id", element: <ProductDetail /> },
       { path: "orders", element: <Orders /> },
+      { path: "subscriptions", element: <Subscriptions /> },
+      { path: "auctions", element: <Auctions /> },
+      { path: "messages", element: <Messages /> },
       { path: "profile", element: <Profile /> },
+      { path: "admin", element: <AdminDashboard /> },
     ],
   },
 ]);

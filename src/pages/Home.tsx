@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Plus, Filter, SlidersHorizontal } from "lucide-react";
-import { fetchPosts, fetchFilteredPosts, type IPost } from "@/services/api";
+import { Search, Plus, Filter, SlidersHorizontal, Gavel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/modules/products/components/ProductCard";
+import { fetchProducts } from "@/modules/products/product.api";
+import type { IProduct } from "@/modules/products/product.types";
 import {
   Select,
   SelectContent,
@@ -14,52 +15,65 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const categories = [
+const CATEGORIES = [
   { value: "all", label: "All Categories" },
   { value: "textbooks", label: "Textbooks" },
-  { value: "notes", label: "Notes" },
+  { value: "notes", label: "Notes & Material" },
   { value: "electronics", label: "Electronics" },
   { value: "stationery", label: "Stationery" },
   { value: "essentials", label: "Essentials" },
   { value: "furniture", label: "Furniture" },
+  { value: "food", label: "Food & Meals" },
+  { value: "services", label: "Services" },
   { value: "other", label: "Other" },
 ];
 
+const PRODUCT_TYPES = [
+  { value: "ALL", label: "All Items" },
+  { value: "SELL", label: "For Sale" },
+  { value: "RENT", label: "For Rent" },
+  { value: "SERVICE", label: "Services" },
+  { value: "SUBSCRIPTION", label: "Subscriptions" },
+  { value: "AUCTION", label: "Live Auctions" },
+];
+
 const Home = () => {
-  const [posts, setPosts] = useState<IPost[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
+  const [selectedType, setSelectedType] = useState("ALL");
 
-  const loadPosts = useCallback(async (cat: string, query: string) => {
+  const loadProducts = useCallback(async (cat: string, query: string, typeFilter: string) => {
     setLoading(true);
     setError(null);
 
-    const result =
-      cat !== "all" || query.trim()
-        ? await fetchFilteredPosts(cat === "all" ? "" : cat, query)
-        : await fetchPosts();
+    const result = await fetchProducts({
+      category: cat !== "all" ? cat : undefined,
+      query: query.trim() ? query : undefined,
+      type: typeFilter !== "ALL" ? typeFilter : undefined,
+    });
 
-    if (result.success) {
-      setPosts(result.success);
+    if (result.error) {
+      setError(result.error);
+      setProducts([]);
     } else {
-      setError(result.error || "Failed to load products");
-      setPosts([]);
+      setProducts(result.products || []);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadPosts(category, searchQuery);
-    }, 400);
+      loadProducts(category, searchQuery, selectedType);
+    }, 350);
     return () => clearTimeout(timer);
-  }, [category, searchQuery, loadPosts]);
+  }, [category, searchQuery, selectedType, loadProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadPosts(category, searchQuery);
+    loadProducts(category, searchQuery, selectedType);
   };
 
   return (
@@ -67,43 +81,70 @@ const Home = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            Browse <span className="text-primary">Products</span>
+            Browse <span className="text-primary">Marketplace</span>
           </h1>
           <p className="text-muted-foreground mt-1">
-            Find textbooks, notes, and essentials from your campus
+            Find textbooks, gear rentals, student services, and recurring hostel plans
           </p>
         </div>
-        <Button asChild className="gap-2">
-          <Link to="/dashboard/products/create">
-            <Plus className="w-4 h-4" />
-            List Item
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild className="gap-2 border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500/10 text-orange-600 dark:text-orange-400">
+            <Link to="/dashboard/auctions">
+              <Gavel className="w-4 h-4" />
+              Live Auctions Arena
+            </Link>
+          </Button>
+          <Button asChild className="gap-2">
+            <Link to="/dashboard/products/create">
+              <Plus className="w-4 h-4" />
+              List Item
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border/50">
-        <form onSubmit={handleSearch} className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </form>
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((cat) => (
-              <SelectItem key={cat.value} value={cat.value}>
-                {cat.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="space-y-3 p-4 bg-card rounded-xl border border-border/50 shadow-xs">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSearch} className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search products, services, notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </form>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="w-full sm:w-[190px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1">
+          {PRODUCT_TYPES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setSelectedType(t.value)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                selectedType === t.value
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -126,18 +167,20 @@ const Home = () => {
           </div>
           <h3 className="text-xl font-semibold text-foreground mb-2">Something went wrong</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => loadPosts(category, searchQuery)}>Try Again</Button>
+          <Button onClick={() => loadProducts(category, searchQuery, selectedType)}>
+            Try Again
+          </Button>
         </div>
-      ) : posts.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="text-center py-16">
           <div className="bg-primary/10 p-4 rounded-full inline-flex mb-4">
             <Filter className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
+          <h3 className="text-xl font-semibold text-foreground mb-2">No listings found</h3>
           <p className="text-muted-foreground mb-4">
-            {searchQuery || category !== "all"
-              ? "Try adjusting your search or filters"
-              : "Be the first to list something on the marketplace!"}
+            {searchQuery || category !== "all" || selectedType !== "ALL"
+              ? "Try adjusting your search filters or listing type"
+              : "Be the first to list an item or service on the marketplace!"}
           </p>
           <Button asChild>
             <Link to="/dashboard/products/create">List Item</Link>
@@ -145,14 +188,14 @@ const Home = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {posts.map((post, index) => (
+          {products.map((product, index) => (
             <motion.div
-              key={post.id}
+              key={product.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.04 }}
             >
-              <ProductCard post={post} />
+              <ProductCard product={product} />
             </motion.div>
           ))}
         </div>

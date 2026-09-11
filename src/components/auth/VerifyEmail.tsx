@@ -21,8 +21,9 @@ const VerifyEmail = () => {
     try {
       const response = await Axios.post("/user/signup-email", { email: data.email });
       if (response.status === 200) {
-        const token = response?.data?.token;
+        const token = response?.data?.data?.token || response?.data?.token;
         if (token) localStorage.setItem("signupToken", token);
+        localStorage.setItem("signupEmail", data.email);
         navigate("/auth/verify-otp");
       }
     } catch (error: any) {

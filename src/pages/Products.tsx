@@ -1,162 +1,143 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Package, MoreVertical } from "lucide-react";
-import { deletePost } from "@/services/api";
+import { Plus, Package, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Axios from "@/utils/Axios";
-
-interface MyProduct {
-  id: string;
-  title: string;
-  price: number;
-  imageUrl?: string;
-  status: string;
-  category: string;
-  createdAt: string;
-}
+import { Card } from "@/components/ui/card";
+import ProductCard from "@/modules/products/components/ProductCard";
+import { fetchProducts, fetchMyProducts, deleteProduct } from "@/modules/products/product.api";
+import type { IProduct } from "@/modules/products/product.types";
 
 const Products = () => {
-  const [myPosts, setMyPosts] = useState<MyProduct[]>([]);
+  const [posts, setPosts] = useState<IProduct[]>([]);
+  const [viewMode, setViewMode] = useState<"mine" | "all">("mine");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadMyPosts();
-  }, []);
-
-  const loadMyPosts = async () => {
+  const loadPosts = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const response = await Axios.get("/products/my-products");
-      setMyPosts(response.data.products || []);
-    } catch (err: any) {
-      setError(err?.response?.data?.error || err?.response?.data?.message || "Failed to load listings");
-    } finally {
-      setLoading(false);
+    const result = viewMode === "mine" ? await fetchMyProducts() : await fetchProducts();
+    if (result.error) {
+      setError(result.error);
+      setPosts([]);
+    } else {
+      setPosts(result.products || []);
     }
-  };
+    setLoading(false);
+  }, [viewMode]);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
 
   const handleDelete = async (postId: string) => {
     if (!confirm("Are you sure you want to delete this listing?")) return;
-    const result = await deletePost(postId);
+    const result = await deleteProduct(postId);
     if (result.success) {
-      setMyPosts(myPosts.filter((p) => p.id !== postId));
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
     } else {
-      setError(result.error || "Failed to delete");
+      setError(result.error || "Failed to delete listing");
     }
   };
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i}>
-            <div className="h-40 bg-muted animate-pulse" />
-            <CardContent className="p-4 space-y-2">
-              <div className="h-5 bg-muted rounded animate-pulse" />
-              <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       {error && (
-        <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
-      )}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">My Listings</h1>
-          <p className="text-muted-foreground">Manage your products on the marketplace</p>
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
-        <Button asChild className="gap-2">
-          <Link to="/dashboard/products/create">
-            <Plus className="w-4 h-4" />
-            New Listing
-          </Link>
-        </Button>
+      )}
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {viewMode === "mine" ? "My Listings" : "All Products"}
+          </h1>
+          <p className="text-muted-foreground">
+            {viewMode === "mine"
+              ? "Manage your active listings, rentals, and service offerings"
+              : "Explore all items, rentals, and services across the campus"}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg bg-muted p-1 border border-border/50">
+            <button
+              type="button"
+              onClick={() => setViewMode("mine")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                viewMode === "mine"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              My Listings
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("all")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                viewMode === "all"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All Listings
+            </button>
+          </div>
+          <Button asChild className="gap-2">
+            <Link to="/dashboard/products/create">
+              <Plus className="w-4 h-4" />
+              New Listing
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {myPosts.length === 0 ? (
-        <Card className="p-12 text-center">
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-card rounded-2xl overflow-hidden border border-border/50">
+              <div className="h-48 bg-muted animate-pulse" />
+              <div className="p-4 space-y-3">
+                <div className="h-6 bg-muted rounded animate-pulse" />
+                <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : posts.length === 0 ? (
+        <Card className="p-12 text-center border-border/50">
           <div className="bg-primary/10 p-4 rounded-full inline-flex mb-4">
             <Package className="w-8 h-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">No listings yet</h3>
-          <p className="text-muted-foreground mb-4">Create your first listing to start selling</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            {viewMode === "mine" ? "No listings yet" : "No products available"}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {viewMode === "mine"
+              ? "Create your first listing to start selling, renting, or offering services"
+              : "Check back later or list the first item yourself"}
+          </p>
           <Button asChild>
             <Link to="/dashboard/products/create">Create Listing</Link>
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {myPosts.map((post, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {posts.map((post, index) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.04 }}
             >
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="flex">
-                  <div className="w-24 h-24 bg-muted flex-shrink-0">
-                    <img
-                      src={post.imageUrl || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="flex-1 p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold truncate">{post.title}</h3>
-                        <p className="text-primary font-bold">₹{post.price}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {post.status === "SOLD" && (
-                            <span className="text-xs text-red-500 font-medium">Sold</span>
-                          )}
-                          {post.status === "RESERVED" && (
-                            <span className="text-xs text-yellow-500 font-medium">Reserved</span>
-                          )}
-                          {post.status === "AVAILABLE" && (
-                            <span className="text-xs text-green-500 font-medium">Active</span>
-                          )}
-                        </div>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link to={`/dashboard/products/${post.id}`}>View</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(post.id)}
-                            className="text-destructive"
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardContent>
-                </div>
-              </Card>
+              <ProductCard
+                product={post}
+                onDelete={viewMode === "mine" ? handleDelete : undefined}
+              />
             </motion.div>
           ))}
         </div>
