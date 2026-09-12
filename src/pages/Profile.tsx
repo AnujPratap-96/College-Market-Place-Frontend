@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Save, X, User, Mail, Phone, GraduationCap, Edit2 } from "lucide-react";
+import { Save, X, User, Mail, Phone, GraduationCap, Edit2, BookOpen, Calendar } from "lucide-react";
 import type { RootState } from "@/store/store";
 import { setUser } from "@/store/userSlice";
 import { ImageUploader } from "@/components/ui/ImageUploader";
@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "@/components/ui/toast";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -23,8 +24,6 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   
   const [form, setForm] = useState({
     name: reduxUser.name || "",
@@ -39,19 +38,47 @@ const Profile = () => {
     loadProfile();
   }, []);
 
+  useEffect(() => {
+    if (!editing && reduxUser.name) {
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || reduxUser.name,
+        phoneNo: prev.phoneNo || reduxUser.phone || "",
+        college: prev.college || reduxUser.college || "",
+        branch: prev.branch || reduxUser.branch || "",
+        year: prev.year || reduxUser.year || "",
+        image: prev.image || reduxUser.photoUrl || "",
+      }));
+    }
+  }, [reduxUser, editing]);
+
   const loadProfile = async () => {
     setLoading(true);
     const result = await fetchUserProfile();
     if (result.success) {
-      setProfile(result.success);
+      const data = result.success;
+      setProfile(data);
       setForm({
-        name: result.success.name || reduxUser.name || "",
-        phoneNo: result.success.phoneNo || reduxUser.phone || "",
-        college: result.success.college || reduxUser.college || "",
-        branch: (result.success as any).branch || reduxUser.branch || "",
-        year: (result.success as any).year || reduxUser.year || "",
-        image: result.success.image || reduxUser.photoUrl || "",
+        name: data.name || reduxUser.name || "",
+        phoneNo: data.phoneNo || reduxUser.phone || "",
+        college: data.college || reduxUser.college || "",
+        branch: data.branch || reduxUser.branch || "",
+        year: data.year || reduxUser.year || "",
+        image: data.image || reduxUser.photoUrl || "",
       });
+      dispatch(
+        setUser({
+          id: data.id || reduxUser.id,
+          name: data.name || reduxUser.name,
+          email: data.email || reduxUser.email,
+          phone: data.phoneNo || reduxUser.phone,
+          college: data.college || reduxUser.college,
+          branch: data.branch || reduxUser.branch,
+          year: data.year || reduxUser.year,
+          role: reduxUser.role,
+          photoUrl: data.image || reduxUser.photoUrl,
+        })
+      );
     }
     setLoading(false);
   };
@@ -59,13 +86,11 @@ const Profile = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setEditing(true);
-    setSuccess(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setError(null);
     
     const result = await updateUserProfile({
       name: form.name,
@@ -77,8 +102,8 @@ const Profile = () => {
     });
 
     if (result.success) {
-      setSuccess(true);
       setEditing(false);
+      toast.success("Profile updated successfully!");
       dispatch(
         setUser({
           id: reduxUser.id,
@@ -93,14 +118,13 @@ const Profile = () => {
         })
       );
     } else {
-      setError(result.error || "Failed to update profile");
+      toast.error(result.error || "Failed to update profile");
     }
     setSaving(false);
   };
 
   const handleCancel = () => {
     setEditing(false);
-    setSuccess(false);
     if (profile) {
       setForm({
         name: profile.name || reduxUser.name || "",
@@ -144,13 +168,26 @@ const Profile = () => {
               onChange={(url) => {
                 setForm((prev) => ({ ...prev, image: url }));
                 setEditing(true);
-                setSuccess(false);
               }}
             />
             <span className="text-[11px] text-muted-foreground mt-2">Click or drag image to update avatar</span>
           </div>
-          <CardTitle className="text-2xl">{form.name}</CardTitle>
-          <CardDescription>{reduxUser.email}</CardDescription>
+          <CardTitle className="text-2xl">{form.name || reduxUser.name || "Student Profile"}</CardTitle>
+          <CardDescription className="flex items-center justify-center gap-2 flex-wrap text-sm">
+            <span>{reduxUser.email || "No email available"}</span>
+            {(form.college || reduxUser.college) && (
+              <>
+                <span>•</span>
+                <span>{form.college || reduxUser.college}</span>
+              </>
+            )}
+            {(form.branch || reduxUser.branch) && (
+              <>
+                <span>•</span>
+                <span>{form.branch || reduxUser.branch}</span>
+              </>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -210,16 +247,37 @@ const Profile = () => {
               />
             </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                {error}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="branch" className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Branch / Department
+                </Label>
+                <Input
+                  id="branch"
+                  name="branch"
+                  value={form.branch}
+                  onChange={handleChange}
+                  disabled={!editing}
+                  placeholder="e.g. Computer Science"
+                />
               </div>
-            )}
-            {success && (
-              <div className="p-3 rounded-lg bg-green-500/10 text-green-500 text-sm">
-                Profile updated successfully!
+
+              <div className="space-y-2">
+                <Label htmlFor="year" className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Academic Year
+                </Label>
+                <Input
+                  id="year"
+                  name="year"
+                  value={form.year}
+                  onChange={handleChange}
+                  disabled={!editing}
+                  placeholder="e.g. 3rd Year"
+                />
               </div>
-            )}
+            </div>
 
             <div className="flex gap-3 pt-4">
               {editing ? (

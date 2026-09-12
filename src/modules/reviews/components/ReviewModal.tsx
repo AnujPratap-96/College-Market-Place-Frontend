@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Star, EyeOff, Check, Loader2 } from 'lucide-react';
 import { submitReview } from '../review.api';
+import { toast } from '@/components/ui/toast';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -43,7 +44,6 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   const [comment, setComment] = useState<string>('');
   const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleTagClick = (tag: string) => {
     if (comment.includes(tag)) return;
@@ -53,12 +53,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) {
-      setError('Please enter feedback comment.');
+      toast.error('Please enter feedback comment.');
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       await submitReview({
@@ -69,10 +68,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         isAnonymous,
       });
 
+      toast.success('Review submitted successfully! Thank you.');
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || 'Failed to submit review');
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to submit review');
     } finally {
       setLoading(false);
     }
@@ -92,12 +92,6 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             {targetName && <span> with {targetName}</span>}
           </DialogDescription>
         </DialogHeader>
-
-        {error && (
-          <div className="bg-destructive/10 border border-destructive/20 text-destructive text-xs p-3 rounded-xl">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div>

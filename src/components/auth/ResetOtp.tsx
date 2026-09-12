@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import Axios from "@/utils/Axios";
+import { toast } from "@/components/ui/toast";
 
 const OTP_LENGTH = 6;
 
 const ResetOtp = () => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
-  const [errorMessage, setErrorMessage] = useState("");
-  const [infoMessage, setInfoMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
@@ -37,8 +36,6 @@ const ResetOtp = () => {
 
   const handleChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
-    setErrorMessage("");
-    setInfoMessage("");
     const updated = [...otp];
     updated[index] = value;
     setOtp(updated);
@@ -68,18 +65,16 @@ const ResetOtp = () => {
       return;
     }
     setResending(true);
-    setErrorMessage("");
-    setInfoMessage("");
     try {
       const response = await Axios.post("/user/forgot-password", { email });
       const newToken = response.data?.data?.token || response.data?.token;
       if (newToken) localStorage.setItem("resetToken", newToken);
       setCountdown(60);
-      setInfoMessage("A new OTP has been sent to your email.");
+      const msg = "A new OTP has been sent to your email.";
+      toast.info(msg);
     } catch (error: any) {
-      setErrorMessage(
-        error?.response?.data?.message || error?.response?.data?.error || "Failed to resend OTP. Please wait."
-      );
+      const msg = error?.response?.data?.message || error?.response?.data?.error || "Failed to resend OTP. Please wait.";
+      toast.error(msg);
     } finally {
       setResending(false);
     }
@@ -87,7 +82,8 @@ const ResetOtp = () => {
 
   const handleSubmit = async () => {
     if (!isAllFilled) {
-      setErrorMessage("Please fill in all 6 digits.");
+      const err = "Please fill in all 6 digits.";
+      toast.error(err);
       return;
     }
 
@@ -107,12 +103,12 @@ const ResetOtp = () => {
       if (response.status === 200) {
         const newToken = response.data?.data?.token || response.data?.token;
         if (newToken) localStorage.setItem("resetToken", newToken);
+        toast.success("OTP verified successfully!");
         navigate("/auth/reset-password");
       }
     } catch (error: any) {
-      setErrorMessage(
-        error?.response?.data?.message || error?.response?.data?.error || "Invalid OTP. Please try again."
-      );
+      const msg = error?.response?.data?.message || error?.response?.data?.error || "Invalid OTP. Please try again.";
+      toast.error(msg);
       setOtp(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } finally {
@@ -156,9 +152,6 @@ const ResetOtp = () => {
           />
         ))}
       </div>
-
-      {infoMessage && <p className="text-emerald-500 text-sm">{infoMessage}</p>}
-      {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
 
       <Button
         size="lg"

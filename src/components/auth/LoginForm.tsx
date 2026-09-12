@@ -7,6 +7,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import useFetchUser from "@/hooks/useFetchUser";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { KeyRound, Sparkles, ArrowLeft } from "lucide-react";
+import { toast } from "@/components/ui/toast";
 
 type FormValues = {
   email: string;
@@ -16,10 +17,8 @@ type FormValues = {
 const OTP_LENGTH = 6;
 
 const LoginForm = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+  const { register, handleSubmit } = useForm<FormValues>();
   const [loginMode, setLoginMode] = useState<"PASSWORD" | "OTP">("PASSWORD");
-  const [serverError, setServerError] = useState("");
-  const [infoMessage, setInfoMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +36,12 @@ const LoginForm = () => {
   const successMessage = (location.state as any)?.message || "";
 
   useEffect(() => {
+    if (successMessage) {
+      toast.success(successMessage);
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
       setCountdown((prev) => prev - 1);
@@ -44,9 +49,14 @@ const LoginForm = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
+  const onInvalid = (formErrors: any) => {
+    const firstError = Object.values(formErrors)[0] as any;
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    }
+  };
+
   const onPasswordSubmit = async (data: FormValues) => {
-    setServerError("");
-    setInfoMessage("");
     setLoading(true);
     try {
       const response = await Axios.post("/user/login", data);
@@ -54,12 +64,12 @@ const LoginForm = () => {
         const token = response.data?.data?.token || response.data?.token;
         if (token) localStorage.setItem("token", token);
         const success = await fetchUser();
+        toast.success("Welcome back! Logged in successfully.");
         if (success) navigate("/dashboard");
       }
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.error || error?.response?.data?.message || "Invalid email or password"
-      );
+      const msg = error?.response?.data?.error || error?.response?.data?.message || "Invalid email or password";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -67,21 +77,18 @@ const LoginForm = () => {
 
   const handleSendLoginOtp = async () => {
     if (!otpEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(otpEmail)) {
-      setServerError("Please enter a valid college email address");
+      toast.error("Please enter a valid college email address");
       return;
     }
-    setServerError("");
-    setInfoMessage("");
     setLoading(true);
     try {
       await Axios.post("/user/login-otp", { email: otpEmail });
       setOtpSent(true);
       setCountdown(60);
-      setInfoMessage(`We sent a 6-digit login code to ${otpEmail}`);
+      toast.info(`We sent a 6-digit login code to ${otpEmail}`);
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.message || error?.response?.data?.error || "Failed to send login OTP. Please check your email."
-      );
+      const msg = error?.response?.data?.message || error?.response?.data?.error || "Failed to send login OTP. Please check your email.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -90,16 +97,13 @@ const LoginForm = () => {
   const handleResendLoginOtp = async () => {
     if (countdown > 0 || resending) return;
     setResending(true);
-    setServerError("");
-    setInfoMessage("");
     try {
       await Axios.post("/user/login-otp", { email: otpEmail });
       setCountdown(60);
-      setInfoMessage("A fresh login code has been sent to your email.");
+      toast.info("A fresh login code has been sent to your email.");
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.message || error?.response?.data?.error || "Failed to resend login OTP."
-      );
+      const msg = error?.response?.data?.message || error?.response?.data?.error || "Failed to resend login OTP.";
+      toast.error(msg);
     } finally {
       setResending(false);
     }
@@ -107,7 +111,6 @@ const LoginForm = () => {
 
   const handleOtpDigitChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
-    setServerError("");
     const updated = [...otpDigits];
     updated[index] = value;
     setOtpDigits(updated);
@@ -134,11 +137,10 @@ const LoginForm = () => {
   const handleVerifyLoginOtp = async () => {
     const code = otpDigits.join("");
     if (code.length !== OTP_LENGTH) {
-      setServerError("Please enter all 6 digits.");
+      toast.error("Please enter all 6 digits.");
       return;
     }
 
-    setServerError("");
     setLoading(true);
     try {
       const response = await Axios.post("/user/verify-login-otp", {
@@ -150,12 +152,12 @@ const LoginForm = () => {
         const token = response.data?.data?.token || response.data?.token;
         if (token) localStorage.setItem("token", token);
         const success = await fetchUser();
+        toast.success("Welcome back! Logged in successfully.");
         if (success) navigate("/dashboard");
       }
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.message || error?.response?.data?.error || "Invalid or expired OTP. Please try again."
-      );
+      const msg = error?.response?.data?.message || error?.response?.data?.error || "Invalid or expired OTP. Please try again.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -163,19 +165,11 @@ const LoginForm = () => {
 
   return (
     <div className="space-y-5 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-700 max-w-md mx-auto">
-      {successMessage && (
-        <p className="text-sm text-green-500 text-center bg-green-500/10 p-2 rounded-lg">
-          {successMessage}
-        </p>
-      )}
-
       <div className="flex rounded-lg bg-zinc-100 dark:bg-zinc-800 p-1">
         <button
           type="button"
           onClick={() => {
             setLoginMode("PASSWORD");
-            setServerError("");
-            setInfoMessage("");
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${
             loginMode === "PASSWORD"
@@ -190,8 +184,6 @@ const LoginForm = () => {
           type="button"
           onClick={() => {
             setLoginMode("OTP");
-            setServerError("");
-            setInfoMessage("");
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${
             loginMode === "OTP"
@@ -205,7 +197,7 @@ const LoginForm = () => {
       </div>
 
       {loginMode === "PASSWORD" ? (
-        <form className="space-y-4" onSubmit={handleSubmit(onPasswordSubmit)}>
+        <form className="space-y-4" onSubmit={handleSubmit(onPasswordSubmit, onInvalid)}>
           <div>
             <Input
               type="email"
@@ -219,9 +211,6 @@ const LoginForm = () => {
                 },
               })}
             />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
-            )}
           </div>
 
           <div className="relative">
@@ -243,9 +232,6 @@ const LoginForm = () => {
             >
               {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
             </div>
-            {errors.password && (
-              <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
-            )}
           </div>
 
           <div className="flex justify-end">
@@ -256,10 +242,6 @@ const LoginForm = () => {
               Forgot password?
             </Link>
           </div>
-
-          {serverError && (
-            <p className="text-sm text-red-500 text-center">{serverError}</p>
-          )}
 
           <Button type="submit" disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white cursor-pointer">
             {loading ? "Logging in..." : "Login with Password"}
@@ -282,15 +264,10 @@ const LoginForm = () => {
                   value={otpEmail}
                   onChange={(e) => {
                     setOtpEmail(e.target.value);
-                    setServerError("");
                   }}
                   className="bg-white dark:bg-zinc-800"
                 />
               </div>
-
-              {serverError && (
-                <p className="text-sm text-red-500 text-center">{serverError}</p>
-              )}
 
               <Button
                 type="button"
@@ -312,8 +289,6 @@ const LoginForm = () => {
                   onClick={() => {
                     setOtpSent(false);
                     setOtpDigits(Array(OTP_LENGTH).fill(""));
-                    setServerError("");
-                    setInfoMessage("");
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mt-1 cursor-pointer"
                 >
@@ -340,13 +315,6 @@ const LoginForm = () => {
                   />
                 ))}
               </div>
-
-              {infoMessage && (
-                <p className="text-emerald-500 text-sm text-center">{infoMessage}</p>
-              )}
-              {serverError && (
-                <p className="text-red-500 text-sm text-center">{serverError}</p>
-              )}
 
               <Button
                 type="button"

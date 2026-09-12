@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import {
   AlertTriangle,
-  AlertCircle,
-  CheckCircle2,
   Coins,
   Loader2,
   Calendar,
@@ -19,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import type { ISubscription, ISubscriptionDelivery } from "../subscription.types";
 import { reportMissedDelivery } from "../subscription.api";
 
@@ -41,14 +40,10 @@ export const MissedDeliveryModal = ({
 
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setReason("");
-      setError(null);
-      setSuccess(null);
       setLoading(false);
     }
   }, [isOpen]);
@@ -59,30 +54,28 @@ export const MissedDeliveryModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!delivery) {
-      setError("No scheduled delivery selected");
+      toast.error("No scheduled delivery selected");
       return;
     }
 
     if (!reason.trim()) {
-      setError("Please describe why this delivery was missed");
+      toast.error("Please describe why this delivery was missed");
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     const res = await reportMissedDelivery(subscription.id, delivery.id, reason.trim());
     if (res.error) {
-      setError(res.error);
+      toast.error(res.error);
       setLoading(false);
     } else {
       dispatch(loadWallet());
-      setSuccess(res.message || "Missed delivery reported and refund credited!");
+      toast.success(res.message || "Missed delivery reported and refund credited!");
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 1200);
+      }, 700);
     }
   };
 
@@ -109,19 +102,6 @@ export const MissedDeliveryModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs border border-emerald-200 dark:border-emerald-800">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span>{success}</span>
-            </div>
-          )}
 
           <div className="p-3.5 rounded-lg border border-border/70 bg-muted/30 space-y-2 text-xs">
             <div className="flex items-center justify-between">
@@ -163,7 +143,7 @@ export const MissedDeliveryModal = ({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g. Delivery agent did not arrive at hostel room, meal was missing"
-              disabled={loading || Boolean(success)}
+              disabled={loading}
               required
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
@@ -174,13 +154,13 @@ export const MissedDeliveryModal = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={loading || Boolean(success) || !reason.trim()}
+              disabled={loading || !reason.trim()}
               className="bg-rose-600 hover:bg-rose-700 text-white font-medium"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

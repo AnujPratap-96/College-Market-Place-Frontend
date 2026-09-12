@@ -10,17 +10,21 @@ const useFetchUser = () => {
   const fetchUser = useCallback(async (): Promise<boolean> => {
     try {
       const res = await Axios.get("/user/profile");
-      const data = res.data;
+      const raw = res.data;
+      const user = raw?.user || raw?.data?.user || raw?.data || raw;
+      if (!user || (!user.id && !user.email)) {
+        return false;
+      }
       dispatch(setUser({
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        college: data.college,
-        branch: data.branch,
-        year: data.year,
-        phone: data.phone,
-        role: data.role,
-        photoUrl: data.profileImage || data.image || "",
+        id: user.id || "",
+        name: user.name || "",
+        email: user.email || "",
+        college: user.college || "",
+        branch: user.branch || "",
+        year: user.year || "",
+        phone: user.phone || user.phoneNo || "",
+        role: user.role || "USER",
+        photoUrl: user.profileImage || user.image || "",
       }));
       return true;
     } catch (error) {

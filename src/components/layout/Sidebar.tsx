@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
   LayoutDashboard,
@@ -12,19 +12,17 @@ import {
   MessageSquare,
   ShieldAlert,
   Gavel,
+  LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { RootState } from "@/store/store";
 import { fetchUnreadCount } from "@/modules/messages/message.api";
 import { setUnreadTotal } from "@/store/messagesSlice";
+import { clearUser } from "@/store/userSlice";
+import Axios from "@/utils/Axios";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/toast";
 
 const navLinks = [
   { to: "/dashboard", label: "Browse", icon: <LayoutDashboard size={20} /> },
@@ -38,8 +36,25 @@ const navLinks = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
+
+  const handleLogout = async () => {
+    try {
+      await Axios.post("/user/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("signupToken");
+      localStorage.removeItem("resetToken");
+      dispatch(clearUser());
+      toast.success("Logged out successfully");
+      navigate("/auth/login");
+    }
+  };
   const unreadTotal = useSelector((state: RootState) => {
     if (typeof state.messages?.unreadTotal === "number" && state.messages.unreadTotal > 0) {
       return state.messages.unreadTotal;
@@ -94,15 +109,17 @@ const Sidebar = () => {
 
       <aside
         className={`
-          fixed md:relative top-0 left-0 z-40 h-screen w-64
+          ${isMobile
+            ? `fixed top-0 left-0 z-50 h-screen w-64 transform transition-transform duration-300 ease-in-out ${
+                mobileOpen ? "translate-x-0" : "-translate-x-full"
+              }`
+            : "fixed top-16 left-0 bottom-0 z-30 w-64 h-[calc(100vh-4rem)]"
+          }
           bg-card border-r border-border
-          transform transition-transform duration-300 ease-in-out
-          ${isMobile ? (mobileOpen ? "translate-x-0" : "-translate-x-full") : ""}
-          md:translate-x-0
-          flex flex-col
+          flex flex-col overflow-hidden
         `}
       >
-        <div className="p-6 border-b border-border">
+        <div className="p-6 border-b border-border md:hidden">
           <Link to="/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">CM</span>
@@ -111,7 +128,7 @@ const Sidebar = () => {
           </Link>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 shrink-0">
           <Button asChild className="w-full gap-2" onClick={() => setMobileOpen(false)}>
             <Link to="/dashboard/products/create">
               <Plus className="w-4 h-4" />
@@ -120,7 +137,7 @@ const Sidebar = () => {
           </Button>
         </div>
 
-        <nav className="flex-1 px-3 py-2">
+        <nav className="flex-1 overflow-y-auto px-3 py-2 scroll-smooth">
           <ul className="space-y-1">
             {[
               ...navLinks,
@@ -163,32 +180,36 @@ const Sidebar = () => {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-accent transition-colors">
-                <Avatar className="w-9 h-9">
-                  <AvatarImage src={user.photoUrl} />
-                  <AvatarFallback>
-                    {user.name?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="font-medium truncate text-sm">
-                    {user.name || "User"}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user.college || "Student"}
-                  </p>
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/dashboard/profile">Profile Settings</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="p-3 border-t border-border shrink-0 space-y-2">
+          <Link
+            to="/dashboard/profile"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-accent transition-colors group"
+          >
+            <Avatar className="w-9 h-9 border border-border">
+              <AvatarImage src={user.photoUrl} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {user.name ? user.name.trim().charAt(0).toUpperCase() : "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 text-left min-w-0">
+              <p className="font-medium truncate text-sm text-foreground group-hover:text-primary transition-colors">
+                {user.name || "Student"}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user.college || user.branch || "Campus Member"}
+              </p>
+            </div>
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2.5 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive hover:bg-destructive/20 hover:border-destructive/30 transition-all cursor-pointer"
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
     </>

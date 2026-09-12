@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchReports, handleReportAction } from '../admin.api'
 import type { IReportItem } from '../admin.types'
+import { toast } from '@/components/ui/toast'
 import {
   ShieldAlert,
   RefreshCw,
@@ -16,16 +17,14 @@ export const ModerationQueue = () => {
   const [reports, setReports] = useState<IReportItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const loadReports = async () => {
     setLoading(true)
-    setFeedback(null)
     const res = await fetchReports()
     if (res.reports) {
       setReports(res.reports)
     } else if (res.error) {
-      setFeedback({ type: 'error', text: res.error })
+      toast.error(res.error)
     }
     setLoading(false)
   }
@@ -39,14 +38,13 @@ export const ModerationQueue = () => {
     action: 'DISMISS' | 'FLAG_PRODUCT' | 'UNFLAG_PRODUCT' | 'DELETE_PRODUCT'
   ) => {
     setProcessingId(reportId)
-    setFeedback(null)
 
     const res = await handleReportAction(reportId, action)
     if (res.success) {
-      setFeedback({ type: 'success', text: res.message || 'Report action completed successfully.' })
+      toast.success(res.message || 'Report action completed successfully.')
       loadReports()
     } else if (res.error) {
-      setFeedback({ type: 'error', text: res.error })
+      toast.error(res.error)
     }
     setProcessingId(null)
   }
@@ -82,19 +80,6 @@ export const ModerationQueue = () => {
           <RefreshCw size={14} /> Refresh Reports ({reports.length})
         </button>
       </div>
-
-      {feedback && (
-        <div
-          className={`flex items-center gap-2 p-4 rounded-xl text-sm font-medium border ${
-            feedback.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-              : 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
-          }`}
-        >
-          {feedback.type === 'success' ? <CheckCircle2 size={18} /> : <ShieldAlert size={18} />}
-          {feedback.text}
-        </div>
-      )}
 
       {reports.length === 0 ? (
         <div className="bg-card border rounded-2xl p-12 text-center space-y-3">

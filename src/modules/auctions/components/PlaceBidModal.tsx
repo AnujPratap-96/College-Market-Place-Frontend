@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Gavel, ShieldCheck, Wallet, AlertCircle, Loader2 } from 'lucide-react';
+import { Gavel, ShieldCheck, Wallet, Loader2 } from 'lucide-react';
 import type { AppDispatch, RootState } from '@/store/store';
 import { loadWallet } from '@/store/walletSlice';
 import { placeBid } from '../auction.api';
@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/toast';
 
 interface PlaceBidModalProps {
   isOpen: boolean;
@@ -39,42 +40,37 @@ export const PlaceBidModal = ({
 
   const [amount, setAmount] = useState<number>(minRequiredBid);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const isBalanceSufficient = wallet.balance >= amount;
 
   const handleQuickAdd = (value: number) => {
     setAmount(value);
-    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (amount < minRequiredBid) {
-      setError(`Minimum bid required is ₹${minRequiredBid.toFixed(2)}`);
+      toast.error(`Minimum bid required is ₹${minRequiredBid.toFixed(2)}`);
       return;
     }
 
     if (!isBalanceSufficient) {
-      setError(`Insufficient wallet balance. You need ₹${amount.toFixed(2)}, but have ₹${wallet.balance.toFixed(2)}.`);
+      toast.error(`Insufficient wallet balance. You need ₹${amount.toFixed(2)}, but have ₹${wallet.balance.toFixed(2)}.`);
       return;
     }
 
     setLoading(true);
-    setError(null);
 
     const res = await placeBid(auction.id, amount);
     if (res.error) {
-      setError(res.error);
+      toast.error(res.error);
     } else {
-      setSuccess(true);
+      toast.success(`🎉 Bid placed: ₹${amount.toFixed(2)}! You are now the leading bidder.`);
       await dispatch(loadWallet());
       onBidSuccess();
       setTimeout(() => {
-        setSuccess(false);
         onClose();
-      }, 1200);
+      }, 700);
     }
     setLoading(false);
   };
@@ -119,10 +115,7 @@ export const PlaceBidModal = ({
                 min={minRequiredBid}
                 step={1}
                 value={amount}
-                onChange={(e) => {
-                  setAmount(Number(e.target.value));
-                  setError(null);
-                }}
+                onChange={(e) => setAmount(Number(e.target.value))}
                 className="pl-8 text-lg font-bold font-mono h-11"
               />
             </div>
@@ -161,33 +154,12 @@ export const PlaceBidModal = ({
             </span>
           </div>
 
-          {!isBalanceSufficient && (
-            <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div>
-                <span>Insufficient funds to place this bid. Please top up your wallet.</span>
-              </div>
-            </div>
-          )}
-
           <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[11px] flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <span>
               Your bid is protected in escrow. If another student outbids you, this entire amount is immediately refunded back to your available balance.
             </span>
           </div>
-
-          {error && (
-            <div className="p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 font-semibold text-xs text-center">
-              🎉 Bid placed successfully! You are now the leading bidder.
-            </div>
-          )}
 
           <div className="flex gap-2 pt-2">
             <Button

@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   CalendarCheck,
   RefreshCw,
-  AlertCircle,
   Repeat,
   Truck,
   Plus,
@@ -23,6 +22,7 @@ import VacationModal from "@/modules/subscriptions/components/VacationModal";
 import MissedDeliveryModal from "@/modules/subscriptions/components/MissedDeliveryModal";
 import ProviderManifestTable from "@/modules/subscriptions/components/ProviderManifestTable";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 import {
   Tabs,
   TabsContent,
@@ -36,7 +36,6 @@ export const Subscriptions = () => {
   const [manifest, setManifest] = useState<IProviderManifest | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [selectedSubForVacation, setSelectedSubForVacation] =
     useState<ISubscription | null>(null);
@@ -54,7 +53,6 @@ export const Subscriptions = () => {
     } else {
       setLoading(true);
     }
-    setError(null);
 
     const [subRes, manifestRes] = await Promise.all([
       fetchMySubscriptions(),
@@ -69,7 +67,7 @@ export const Subscriptions = () => {
     }
 
     if (subRes.error && manifestRes.error) {
-      setError(subRes.error);
+      toast.error(subRes.error);
     }
 
     setLoading(false);
@@ -130,13 +128,6 @@ export const Subscriptions = () => {
           </Button>
         </div>
       </div>
-
-      {error && (
-        <div className="flex items-center gap-2 p-4 rounded-xl bg-destructive/10 text-destructive text-sm border border-destructive/20">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full max-w-md grid-cols-2">

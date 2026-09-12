@@ -13,8 +13,8 @@ import {
   KeyRound,
   Loader2,
   Tag,
-  AlertCircle,
   MessageSquare,
+  Gavel,
 } from "lucide-react";
 import type { AppDispatch, RootState } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
@@ -28,6 +28,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import OtpHandshakeModal from "./OtpHandshakeModal";
 import DisputeModal from "./DisputeModal";
+import { toast } from "@/components/ui/toast";
 
 interface OrderCardProps {
   order: IOrder;
@@ -58,6 +59,13 @@ const getOrderTypeBadge = (type: OrderType) => {
           Service
         </span>
       );
+    case "AUCTION":
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+          <Gavel className="w-3 h-3" />
+          Auction Win
+        </span>
+      );
     default:
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground border">
@@ -67,7 +75,16 @@ const getOrderTypeBadge = (type: OrderType) => {
   }
 };
 
-const getStatusBadge = (status: OrderStatus) => {
+const getStatusBadge = (status: OrderStatus, order?: IOrder) => {
+  if (status === "RENTAL_ACTIVE" && order?.rentalEndDate && new Date(order.rentalEndDate) < new Date()) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+        <AlertTriangle className="w-3 h-3" />
+        Rental Overdue
+      </span>
+    );
+  }
+
   switch (status) {
     case "PENDING_PAYMENT":
       return (
@@ -145,7 +162,6 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
 
   const [disputeModalOpen, setDisputeModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   const formattedDate = new Date(order.createdAt).toLocaleDateString(undefined, {
     year: "numeric",
@@ -158,26 +174,26 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
 
   const handleServiceComplete = async () => {
     setActionLoading(true);
-    setActionError(null);
     const result = await completeService(order.id);
     setActionLoading(false);
     if (result.success) {
+      toast.success("Service marked as delivered!");
       onRefresh();
     } else {
-      setActionError(result.error || "Failed to mark service complete");
+      toast.error(result.error || "Failed to mark service complete");
     }
   };
 
   const handleServiceConfirm = async () => {
     setActionLoading(true);
-    setActionError(null);
     const result = await confirmService(order.id);
     setActionLoading(false);
     if (result.success) {
+      toast.success("Service confirmed and funds released!");
       dispatch(loadWallet());
       onRefresh();
     } else {
-      setActionError(result.error || "Failed to confirm service");
+      toast.error(result.error || "Failed to confirm service");
     }
   };
 
@@ -186,19 +202,20 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
       return;
     }
     setActionLoading(true);
-    setActionError(null);
     const result = await cancelOrder(order.id);
     setActionLoading(false);
     if (result.success) {
+      toast.success("Order cancelled and funds refunded!");
       dispatch(loadWallet());
       onRefresh();
     } else {
-      setActionError(result.error || "Failed to cancel order");
+      toast.error(result.error || "Failed to cancel order");
     }
   };
 
   const canCancel =
-    order.status === "ESCROW_HELD" || order.status === "PENDING_PAYMENT";
+    (order.status === "ESCROW_HELD" || order.status === "PENDING_PAYMENT") &&
+    !(order.orderType === "AUCTION" && role === "buyer");
 
   const canDispute =
     order.status !== "COMPLETED" &&
@@ -235,7 +252,7 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{formattedDate}</span>
               </div>
-              {getStatusBadge(order.status)}
+              {getStatusBadge(order.status, order)}
             </div>
           </div>
 
@@ -307,13 +324,6 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                   {order.disputeReason || "Escalated for administrative mediation."}
                 </span>
               </div>
-            </div>
-          )}
-
-          {actionError && (
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{actionError}</span>
             </div>
           )}
 
@@ -462,7 +472,7 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                 </>
               )}
 
-              {order.orderType === "PURCHASE" && (
+              {(order.orderType === "PURCHASE" || order.orderType === "AUCTION") && (
                 <>
                   {order.status === "ESCROW_HELD" && (
                     <>

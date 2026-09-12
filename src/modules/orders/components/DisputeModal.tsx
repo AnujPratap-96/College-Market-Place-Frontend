@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle, ShieldAlert, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ShieldAlert, Loader2 } from "lucide-react";
 import type { IOrder } from "../order.types";
 import { disputeOrder } from "../order.api";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -45,15 +46,11 @@ export const DisputeModal = ({
   const [reason, setReason] = useState(COMMON_REASONS[0]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setReason(COMMON_REASONS[0]);
       setNotes("");
-      setError(null);
-      setSuccess(null);
       setLoading(false);
     }
   }, [isOpen]);
@@ -62,34 +59,32 @@ export const DisputeModal = ({
     e.preventDefault();
 
     if (!reason) {
-      setError("Please select a dispute reason");
+      toast.error("Please select a dispute reason");
       return;
     }
 
     if (notes.trim().length > 0 && notes.trim().length < 5) {
-      setError("Additional notes must be at least 5 characters");
+      toast.error("Additional notes must be at least 5 characters");
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     const result = await disputeOrder(order.id, reason, notes);
 
     setLoading(false);
 
     if (result.success) {
-      setSuccess(
+      toast.warning(
         result.message ||
           "Dispute filed successfully! Escrow frozen and escalated to campus admin."
       );
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 1000);
+      }, 700);
     } else {
-      setError(result.error || "Failed to file dispute");
+      toast.error(result.error || "Failed to file dispute");
     }
   };
 
@@ -112,19 +107,6 @@ export const DisputeModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs border border-emerald-200 dark:border-emerald-800">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span>{success}</span>
-            </div>
-          )}
 
           <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-200">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
@@ -143,7 +125,7 @@ export const DisputeModal = ({
             <Select
               value={reason}
               onValueChange={(val) => setReason(val)}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
             >
               <SelectTrigger id="dispute-reason" className="w-full">
                 <SelectValue placeholder="Select a reason" />
@@ -168,7 +150,7 @@ export const DisputeModal = ({
               placeholder="Provide specific details about what went wrong, condition issues, or attempts to contact the counterparty..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -178,13 +160,13 @@ export const DisputeModal = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!reason || loading || Boolean(success)}
+              disabled={!reason || loading}
               className="bg-rose-600 hover:bg-rose-700 text-white font-medium"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

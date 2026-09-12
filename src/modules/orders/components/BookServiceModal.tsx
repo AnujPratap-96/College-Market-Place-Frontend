@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { isAxiosError } from "axios";
-import { Clock, ShieldCheck, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Clock, ShieldCheck, Loader2 } from "lucide-react";
 import Axios from "@/utils/Axios";
 import type { AppDispatch } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 
 interface BookServiceModalProps {
   isOpen: boolean;
@@ -35,23 +36,17 @@ export const BookServiceModal = ({
   const [preferredTime, setPreferredTime] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setPreferredTime("");
       setNotes("");
-      setError(null);
-      setSuccess(null);
       setLoading(false);
     }
   }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setLoading(true);
 
     try {
@@ -63,7 +58,7 @@ export const BookServiceModal = ({
 
       const res = await Axios.post("/orders/service-book", payload);
       dispatch(loadWallet());
-      setSuccess(
+      toast.success(
         res.data?.message ||
           "Service booked successfully! Payment held in secure escrow."
       );
@@ -71,20 +66,19 @@ export const BookServiceModal = ({
       setTimeout(() => {
         onClose();
         navigate("/dashboard/orders");
-      }, 1200);
+      }, 700);
     } catch (err: unknown) {
+      let errMsg = "Failed to book service";
       if (isAxiosError(err)) {
-        setError(
+        errMsg =
           err.response?.data?.message ||
-            err.response?.data?.error ||
-            err.message ||
-            "Failed to book service"
-        );
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to book service";
       } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to book service");
+        errMsg = err.message;
       }
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -104,19 +98,6 @@ export const BookServiceModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs border border-emerald-200 dark:border-emerald-800">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span>{success}</span>
-            </div>
-          )}
 
           <div className="rounded-xl border border-border/70 bg-muted/40 p-4 space-y-3">
             <div className="flex items-center justify-between text-sm">
@@ -163,7 +144,7 @@ export const BookServiceModal = ({
               placeholder="e.g. Tomorrow at 5:00 PM or Saturday morning"
               value={preferredTime}
               onChange={(e) => setPreferredTime(e.target.value)}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
             />
           </div>
 
@@ -177,7 +158,7 @@ export const BookServiceModal = ({
               placeholder="e.g. Room 304, Hall 4. Bring screwdriver kit if possible."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -187,13 +168,13 @@ export const BookServiceModal = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={loading || Boolean(success)}
+              disabled={loading}
               className="bg-purple-600 hover:bg-purple-700 text-white font-medium"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

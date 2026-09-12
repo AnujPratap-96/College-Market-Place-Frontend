@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import { uploadImage } from '@/modules/upload/upload.api';
+import { toast } from '@/components/ui/toast';
 import {
   UploadCloud,
   X,
   Camera,
   RefreshCw,
-  AlertCircle,
   Link as LinkIcon,
   CheckCircle2,
 } from 'lucide-react';
@@ -31,31 +31,30 @@ export const ImageUploader = ({
 }: ImageUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file (JPEG, PNG, WebP).');
+      toast.error('Please select an image file (JPEG, PNG, WebP).');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be under 5MB.');
+      toast.error('Image must be under 5MB.');
       return;
     }
 
-    setError(null);
     setUploading(true);
 
     const res = await uploadImage(file, folder);
     setUploading(false);
 
     if (res.error) {
-      setError(res.error);
+      toast.error(res.error);
     } else if (res.url) {
+      toast.success('Image uploaded successfully!');
       onChange(res.url);
     }
   };
@@ -140,12 +139,6 @@ export const ImageUploader = ({
             <X size={12} />
           </button>
         )}
-
-        {error && (
-          <p className="text-[11px] text-rose-500 mt-1.5 flex items-center gap-1">
-            <AlertCircle size={12} /> {error}
-          </p>
-        )}
       </div>
     );
   }
@@ -226,13 +219,6 @@ export const ImageUploader = ({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900">
-          <AlertCircle size={14} className="shrink-0" />
-          <span>{error}</span>
         </div>
       )}
 

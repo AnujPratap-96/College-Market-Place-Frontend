@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { fetchAdminSettings, updateAdminSettings } from '../admin.api'
 import type { ISystemSettings } from '../admin.types'
-import { Sliders, CheckCircle2, AlertCircle, RefreshCw, ShieldCheck, Zap } from 'lucide-react'
+import { Sliders, RefreshCw, ShieldCheck, Zap } from 'lucide-react'
+import { toast } from '@/components/ui/toast'
 
 export const SettingsManager = () => {
   const [settings, setSettings] = useState<ISystemSettings>({
@@ -12,16 +13,14 @@ export const SettingsManager = () => {
   })
   const [loading, setLoading] = useState<boolean>(true)
   const [saving, setSaving] = useState<boolean>(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const loadSettings = async () => {
     setLoading(true)
-    setMessage(null)
     const res = await fetchAdminSettings()
     if (res.settings) {
       setSettings(res.settings)
     } else if (res.error) {
-      setMessage({ type: 'error', text: res.error })
+      toast.error(res.error)
     }
     setLoading(false)
   }
@@ -33,7 +32,6 @@ export const SettingsManager = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    setMessage(null)
 
     const res = await updateAdminSettings({
       platform_commission_percent: settings.platform_commission_percent,
@@ -44,9 +42,9 @@ export const SettingsManager = () => {
 
     if (res.settings) {
       setSettings(res.settings)
-      setMessage({ type: 'success', text: 'Platform settings and commission rates saved successfully.' })
+      toast.success('Platform settings and commission rates saved successfully.')
     } else if (res.error) {
-      setMessage({ type: 'error', text: res.error })
+      toast.error(res.error)
     }
     setSaving(false)
   }
@@ -82,19 +80,6 @@ export const SettingsManager = () => {
           <RefreshCw size={14} /> Refresh Live Values
         </button>
       </div>
-
-      {message && (
-        <div
-          className={`flex items-center gap-2 p-4 rounded-xl text-sm font-medium border ${
-            message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-              : 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
-          }`}
-        >
-          {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          {message.text}
-        </div>
-      )}
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="p-5 rounded-xl border bg-muted/20 space-y-4">

@@ -16,7 +16,7 @@ export interface IDisputedOrder {
   platformFee: number
   totalAmount: number
   securityDeposit: number
-  orderType: 'PURCHASE' | 'RENTAL' | 'SERVICE'
+  orderType: 'PURCHASE' | 'RENTAL' | 'SERVICE' | 'AUCTION'
   status: string
   disputeReason?: string
   disputedAt?: string

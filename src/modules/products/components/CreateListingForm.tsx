@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { AlertCircle, Loader2, Gavel } from "lucide-react";
+import { Loader2, Gavel } from "lucide-react";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { createProduct } from "../product.api";
 import type { ProductType, SubscriptionFrequency } from "../product.types";
+import { toast } from "@/components/ui/toast";
 
 const CATEGORIES = [
   { value: "books", label: "Books & Study Material" },
@@ -38,7 +39,6 @@ const CATEGORIES = [
 const CreateListingForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [type, setType] = useState<ProductType>("SELL");
   const [title, setTitle] = useState("");
@@ -60,39 +60,38 @@ const CreateListingForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     const trimmedTitle = title.trim();
     const trimmedDesc = description.trim();
     const numPrice = parseFloat(price);
 
     if (!trimmedTitle || trimmedTitle.length < 2) {
-      setError("Title must be at least 2 characters long.");
+      toast.error("Title must be at least 2 characters long.");
       return;
     }
 
     if (!category) {
-      setError("Please select a category.");
+      toast.error("Please select a category.");
       return;
     }
 
     if (isNaN(numPrice) || numPrice <= 0) {
-      setError("Price must be greater than 0.");
+      toast.error("Price must be greater than 0.");
       return;
     }
 
     if (!trimmedDesc || trimmedDesc.length < 5) {
-      setError("Description must be at least 5 characters long.");
+      toast.error("Description must be at least 5 characters long.");
       return;
     }
 
     if (type === "SERVICE" && !serviceDuration.trim()) {
-      setError("Please specify service duration (e.g., '1 hour', 'Per assignment').");
+      toast.error("Please specify service duration (e.g., '1 hour', 'Per assignment').");
       return;
     }
 
     if (type === "SUBSCRIPTION" && !deliverySlots.trim()) {
-      setError("Please provide delivery/service slots (e.g., 'Lunch & Dinner').");
+      toast.error("Please provide delivery/service slots (e.g., 'Lunch & Dinner').");
       return;
     }
 
@@ -120,13 +119,19 @@ const CreateListingForm = () => {
     setLoading(false);
 
     if (result.success) {
+      toast.success(
+        type === "AUCTION"
+          ? "Auction listing created successfully!"
+          : "Listing submitted successfully!"
+      );
       if (type === "AUCTION") {
         navigate("/dashboard/auctions");
       } else {
         navigate("/dashboard/products");
       }
     } else {
-      setError(result.error || "Failed to create listing.");
+      const err = result.error || "Failed to create listing.";
+      toast.error(err);
     }
   };
 
@@ -140,12 +145,6 @@ const CreateListingForm = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="listing-type">Listing Type *</Label>

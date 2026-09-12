@@ -98,3 +98,36 @@ export const fetchFinancialStats = async (): Promise<{ stats?: IFinancialStats; 
     return { error: getErrorMessage(error, 'Failed to fetch financial statistics') }
   }
 }
+
+export const fetchPendingAuctions = async (): Promise<{ auctions?: any[]; error?: string }> => {
+  try {
+    const res = await Axios.get('/admin/auctions/pending')
+    return { auctions: res.data?.data?.auctions || [] }
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to fetch pending auctions') }
+  }
+}
+
+export const approveAuction = async (
+  auctionId: string,
+  durationHours?: number
+): Promise<{ success?: boolean; auction?: any; error?: string }> => {
+  try {
+    const res = await Axios.post(`/admin/auctions/${auctionId}/approve`, { durationHours })
+    return { success: true, auction: res.data?.data?.auction }
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to approve auction') }
+  }
+}
+
+export const rejectAuction = async (
+  auctionId: string,
+  reason?: string
+): Promise<{ success?: boolean; auction?: any; error?: string }> => {
+  try {
+    const res = await Axios.post(`/admin/auctions/${auctionId}/reject`, { reason })
+    return { success: true, auction: res.data?.data?.auction }
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to reject auction') }
+  }
+}

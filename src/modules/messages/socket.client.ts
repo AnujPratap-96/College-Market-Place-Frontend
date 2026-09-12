@@ -12,9 +12,11 @@ export const getSocket = (): Socket | null => {
     return null;
   }
 
-  const targetUrl = import.meta.env.VITE_API_URL
-    ? new URL(import.meta.env.VITE_API_URL).origin
-    : 'http://localhost:5000';
+  const targetUrl =
+    import.meta.env.VITE_SOCKET_URL ||
+    (import.meta.env.VITE_API_BASE_URL
+      ? new URL(import.meta.env.VITE_API_BASE_URL).origin
+      : 'http://localhost:5000');
 
   if (socket) {
     socket.disconnect();

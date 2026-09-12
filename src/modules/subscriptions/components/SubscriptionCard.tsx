@@ -25,6 +25,7 @@ import type {
 } from "../subscription.types";
 import { resumeVacation, cancelSubscription } from "../subscription.api";
 import DeliveryCalendar from "./DeliveryCalendar";
+import { toast } from "@/components/ui/toast";
 
 interface SubscriptionCardProps {
   subscription: ISubscription;
@@ -91,7 +92,6 @@ export const SubscriptionCard = ({
   const [resuming, setResuming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
-  const [cardError, setCardError] = useState<string | null>(null);
 
   const isCurrentlyPaused =
     subscription.status === "PAUSED" ||
@@ -99,12 +99,12 @@ export const SubscriptionCard = ({
 
   const handleResume = async () => {
     setResuming(true);
-    setCardError(null);
     const res = await resumeVacation(subscription.id);
     setResuming(false);
     if (res.error) {
-      setCardError(res.error);
+      toast.error(res.error);
     } else {
+      toast.success("Subscription resumed successfully!");
       dispatch(loadWallet());
       onRefresh();
     }
@@ -112,13 +112,13 @@ export const SubscriptionCard = ({
 
   const handleCancel = async () => {
     setCancelling(true);
-    setCardError(null);
     const res = await cancelSubscription(subscription.id);
     setCancelling(false);
     setShowConfirmCancel(false);
     if (res.error) {
-      setCardError(res.error);
+      toast.error(res.error);
     } else {
+      toast.success("Subscription cancelled successfully!");
       dispatch(loadWallet());
       onRefresh();
     }
@@ -135,12 +135,6 @@ export const SubscriptionCard = ({
 
   return (
     <Card className="p-5 border border-border/70 shadow-sm rounded-xl space-y-4 hover:border-border transition-all">
-      {cardError && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{cardError}</span>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/50 pb-4">
         <div className="flex items-start gap-3">

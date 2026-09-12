@@ -6,18 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, RefreshCw } from "lucide-react";
 import Axios from "@/utils/Axios";
+import { toast } from "@/components/ui/toast";
 
 type FormValues = { email: string };
 
 const ForgotPassword = () => {
   const defaultEmail = typeof window !== "undefined" ? localStorage.getItem("resetEmail") || "" : "";
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: { email: defaultEmail },
   });
-  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [retryCooldown, setRetryCooldown] = useState(0);
   const navigate = useNavigate();
+
+  const onInvalid = (errors: any) => {
+    const firstError = Object.values(errors)[0] as any;
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    }
+  };
 
   useEffect(() => {
     if (retryCooldown <= 0) return;
@@ -29,7 +36,6 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: FormValues) => {
     if (retryCooldown > 0) return;
-    setServerError("");
     setLoading(true);
     try {
       const response = await Axios.post("/user/forgot-password", { email: data.email });
@@ -37,12 +43,13 @@ const ForgotPassword = () => {
         const token = response.data?.token;
         if (token) localStorage.setItem("resetToken", token);
         localStorage.setItem("resetEmail", data.email);
+        toast.info(`Password reset OTP sent to ${data.email}`);
         navigate("/auth/reset-otp");
       }
     } catch (error: any) {
       const msg =
         error?.response?.data?.message || error?.response?.data?.error || "Something went wrong.";
-      setServerError(msg);
+      toast.error(msg);
       if (error?.response?.status === 429 || msg.toLowerCase().includes("recently sent")) {
         setRetryCooldown(60);
       }
@@ -63,7 +70,7 @@ const ForgotPassword = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
         <div>
           <Label htmlFor="email">Email Address</Label>
           <Input
@@ -79,14 +86,7 @@ const ForgotPassword = () => {
               },
             })}
           />
-          {errors.email && (
-            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
-          )}
         </div>
-
-        {serverError && (
-          <p className="text-sm text-red-500 text-center">{serverError}</p>
-        )}
 
         <Button
           type="submit"

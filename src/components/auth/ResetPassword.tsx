@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { KeyRound } from "lucide-react";
 import Axios from "@/utils/Axios";
+import { toast } from "@/components/ui/toast";
 
 type FormValues = {
   password: string;
@@ -14,12 +15,18 @@ type FormValues = {
 };
 
 const ResetPassword = () => {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormValues>();
+  const { register, handleSubmit, watch } = useForm<FormValues>();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const onInvalid = (errors: any) => {
+    const firstError = Object.values(errors)[0] as any;
+    if (firstError?.message) {
+      toast.error(firstError.message);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("resetToken");
@@ -33,7 +40,6 @@ const ResetPassword = () => {
       return;
     }
 
-    setServerError("");
     setLoading(true);
     try {
       const response = await Axios.post(
@@ -43,12 +49,22 @@ const ResetPassword = () => {
       );
       if (response.status === 200) {
         localStorage.removeItem("resetToken");
+        toast.success("Password reset successfully. Please log in.");
         navigate("/auth/login", { state: { message: "Password reset successfully. Please log in." } });
       }
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.error || error?.response?.data?.message || "Something went wrong."
-      );
+      const msg =
+        error?.response?.data?.error || error?.response?.data?.message || "Something went wrong.";
+      toast.error(msg);
+      if (
+        msg.toLowerCase().includes("expired") ||
+        msg.toLowerCase().includes("unauthorized") ||
+        msg.toLowerCase().includes("token")
+      ) {
+        setTimeout(() => {
+          navigate("/auth/forgot-password");
+        }, 1500);
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +82,7 @@ const ResetPassword = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
         <div>
           <Label htmlFor="password">New Password</Label>
           <div className="relative mt-1">
@@ -87,9 +103,6 @@ const ResetPassword = () => {
               {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
             </div>
           </div>
-          {errors.password && (
-            <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
-          )}
         </div>
 
         <div>
@@ -112,29 +125,7 @@ const ResetPassword = () => {
               {showConfirm ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
             </div>
           </div>
-          {errors.confirmPassword && (
-            <p className="text-sm text-red-500 mt-1">{errors.confirmPassword.message}</p>
-          )}
         </div>
-
-        {serverError && (
-          <div className="space-y-2 text-center">
-            <p className="text-sm text-red-500">{serverError}</p>
-            {(serverError.toLowerCase().includes("expired") ||
-              serverError.toLowerCase().includes("unauthorized") ||
-              serverError.toLowerCase().includes("token")) && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/auth/forgot-password")}
-                className="text-xs cursor-pointer"
-              >
-                Request New Reset OTP
-              </Button>
-            )}
-          </div>
-        )}
 
         <Button
           type="submit"

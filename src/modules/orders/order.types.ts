@@ -8,7 +8,7 @@ export type OrderStatus =
   | 'DISPUTED'
   | 'REFUNDED';
 
-export type OrderType = 'PURCHASE' | 'RENTAL' | 'SERVICE';
+export type OrderType = 'PURCHASE' | 'RENTAL' | 'SERVICE' | 'AUCTION';
 
 export interface IOrder {
   id: string;

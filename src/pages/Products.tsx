@@ -1,25 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Package, AlertCircle } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import ProductCard from "@/modules/products/components/ProductCard";
 import { fetchProducts, fetchMyProducts, deleteProduct } from "@/modules/products/product.api";
 import type { IProduct } from "@/modules/products/product.types";
+import { toast } from "@/components/ui/toast";
 
 const Products = () => {
   const [posts, setPosts] = useState<IProduct[]>([]);
   const [viewMode, setViewMode] = useState<"mine" | "all">("mine");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
-    setError(null);
     const result = viewMode === "mine" ? await fetchMyProducts() : await fetchProducts();
     if (result.error) {
-      setError(result.error);
+      toast.error(result.error);
       setPosts([]);
     } else {
       setPosts(result.products || []);
@@ -35,20 +34,15 @@ const Products = () => {
     if (!confirm("Are you sure you want to delete this listing?")) return;
     const result = await deleteProduct(postId);
     if (result.success) {
+      toast.success("Listing deleted successfully!");
       setPosts((prev) => prev.filter((p) => p.id !== postId));
     } else {
-      setError(result.error || "Failed to delete listing");
+      toast.error(result.error || "Failed to delete listing");
     }
   };
 
   return (
     <div className="space-y-6">
-      {error && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm border border-destructive/20">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

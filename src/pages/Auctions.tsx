@@ -80,7 +80,7 @@ const Auctions = () => {
         </div>
 
         <Button asChild size="lg" className="gap-2 shrink-0 rounded-xl shadow-md">
-          <Link to="/dashboard/create-listing">
+          <Link to="/dashboard/products/create">
             <Plus className="w-4 h-4" />
             Host an Auction
           </Link>

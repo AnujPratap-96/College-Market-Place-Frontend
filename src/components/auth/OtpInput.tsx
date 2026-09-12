@@ -3,13 +3,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import Axios from "@/utils/Axios";
+import { toast } from "@/components/ui/toast";
 
 const OTP_LENGTH = 6;
 
 export default function OtpInput() {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
-  const [errorMessage, setErrorMessage] = useState("");
-  const [infoMessage, setInfoMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(60);
@@ -36,8 +35,6 @@ export default function OtpInput() {
 
   const handleChange = (value: string, index: number) => {
     if (!/^\d?$/.test(value)) return;
-    setErrorMessage("");
-    setInfoMessage("");
     const updatedOtp = [...otp];
     updatedOtp[index] = value;
     setOtp(updatedOtp);
@@ -71,18 +68,16 @@ export default function OtpInput() {
       return;
     }
     setResending(true);
-    setErrorMessage("");
-    setInfoMessage("");
     try {
       const response = await Axios.post("/user/resend-otp", { email, type: "SIGNUP" });
       const newToken = response.data?.data?.token || response.data?.token;
       if (newToken) localStorage.setItem("signupToken", newToken);
       setCountdown(60);
-      setInfoMessage("A new OTP has been sent to your email.");
+      const msg = "A new OTP has been sent to your email.";
+      toast.info(msg);
     } catch (error: any) {
-      setErrorMessage(
-        error?.response?.data?.message || error?.response?.data?.error || "Failed to resend OTP. Please wait."
-      );
+      const msg = error?.response?.data?.message || error?.response?.data?.error || "Failed to resend OTP. Please wait.";
+      toast.error(msg);
     } finally {
       setResending(false);
     }
@@ -91,7 +86,8 @@ export default function OtpInput() {
   const handleSubmit = async () => {
     const enteredOtp = otp.join("");
     if (!isAllDigitsFilled) {
-      setErrorMessage("Please fill in all 6 digits with valid numbers.");
+      const err = "Please fill in all 6 digits with valid numbers.";
+      toast.error(err);
       return;
     }
 
@@ -109,12 +105,16 @@ export default function OtpInput() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.status === 200) {
+        const verifiedToken = response.data?.token || response.data?.data?.token;
+        if (verifiedToken) {
+          localStorage.setItem("signupToken", verifiedToken);
+        }
+        toast.success("Email verified successfully!");
         navigate("/auth/complete-signup");
       }
     } catch (error: any) {
-      setErrorMessage(
-        error?.response?.data?.error || error?.response?.data?.message || "Invalid OTP. Please try again."
-      );
+      const msg = error?.response?.data?.error || error?.response?.data?.message || "Invalid OTP. Please try again.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -143,11 +143,6 @@ export default function OtpInput() {
           />
         ))}
       </div>
-
-      {infoMessage && <p className="text-emerald-500 text-sm mb-4">{infoMessage}</p>}
-      {errorMessage && (
-        <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
-      )}
 
       <Button
         size="lg"

@@ -3,8 +3,6 @@ import { useDispatch } from "react-redux";
 import {
   Calendar,
   PauseCircle,
-  AlertCircle,
-  CheckCircle2,
   Coins,
   Loader2,
   Info,
@@ -20,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import type { ISubscription } from "../subscription.types";
 import { setVacation } from "../subscription.api";
 
@@ -41,15 +40,11 @@ export const VacationModal = ({
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setFromDate("");
       setToDate("");
-      setError(null);
-      setSuccess(null);
       setLoading(false);
     }
   }, [isOpen]);
@@ -72,29 +67,27 @@ export const VacationModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fromDate || !toDate) {
-      setError("Please select both start and end dates");
+      toast.error("Please select both start and end dates");
       return;
     }
     if (fromDate > toDate) {
-      setError("End date must be on or after start date");
+      toast.error("End date must be on or after start date");
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     const res = await setVacation(subscription.id, fromDate, toDate);
     if (res.error) {
-      setError(res.error);
+      toast.error(res.error);
       setLoading(false);
     } else {
       dispatch(loadWallet());
-      setSuccess(res.message || "Vacation mode activated and pro-rata refund credited!");
+      toast.success(res.message || "Vacation mode activated and pro-rata refund credited!");
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 1200);
+      }, 700);
     }
   };
 
@@ -114,19 +107,6 @@ export const VacationModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          {error && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs border border-emerald-200 dark:border-emerald-800">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span>{success}</span>
-            </div>
-          )}
 
           <div className="p-3.5 rounded-lg border border-border/70 bg-muted/30 space-y-2 text-xs">
             <div className="flex items-center justify-between">
@@ -155,7 +135,7 @@ export const VacationModal = ({
                   min={todayStr}
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  disabled={loading || Boolean(success)}
+                  disabled={loading}
                   required
                   className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
@@ -173,7 +153,7 @@ export const VacationModal = ({
                   min={fromDate || todayStr}
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  disabled={loading || Boolean(success)}
+                  disabled={loading}
                   required
                   className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
@@ -217,13 +197,13 @@ export const VacationModal = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={loading || Boolean(success)}
+              disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={loading || Boolean(success) || !fromDate || !toDate || pausedDays === 0}
+              disabled={loading || !fromDate || !toDate || pausedDays === 0}
               className="bg-amber-600 hover:bg-amber-700 text-white font-medium"
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

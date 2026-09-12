@@ -197,20 +197,21 @@ export const fetchUserProfile = async (): Promise<{ success?: IUserProfile; erro
   try {
     const response = await axios.get("/user/profile");
     if (response.status === 200) {
-      const data = response.data;
+      const raw = response.data;
+      const data = raw?.user || raw?.data?.user || raw?.data || raw;
       return {
         success: {
-          id: data.id,
-          name: data.name,
-          email: data.email,
-          college: data.college,
+          id: data.id || "",
+          name: data.name || "",
+          email: data.email || "",
+          college: data.college || "",
           branch: data.branch || "",
           year: data.year || "",
           phoneNo: data.phone || data.phoneNo || "",
           image: data.profileImage || data.image || "",
-          posts: (data.posts || []).map(normalizeProduct),
-          requests: data.requests || [],
-          purchasedItems: (data.purchasedItems || []).map(normalizeProduct),
+          posts: (raw.posts || data.posts || []).map(normalizeProduct),
+          requests: raw.requests || data.requests || [],
+          purchasedItems: (raw.purchasedItems || data.purchasedItems || []).map(normalizeProduct),
         },
       };
     }

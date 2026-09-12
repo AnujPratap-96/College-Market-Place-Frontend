@@ -16,7 +16,6 @@ import {
   ShoppingBag,
   Sparkles,
   Loader2,
-  AlertCircle,
   Gavel,
   Trophy,
 } from "lucide-react";
@@ -24,6 +23,7 @@ import type { RootState, AppDispatch } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
 import Axios from "@/utils/Axios";
 import { fetchProductById } from "@/modules/products/product.api";
+import { toast } from "@/components/ui/toast";
 import type { IProduct, ProductType } from "@/modules/products/product.types";
 import { BookServiceModal } from "@/modules/orders/components/BookServiceModal";
 import { SubscribeModal } from "@/modules/subscriptions/components/SubscribeModal";
@@ -58,7 +58,6 @@ const ProductDetail = () => {
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -152,7 +151,6 @@ const ProductDetail = () => {
   const handleDirectCheckout = async (checkoutType: "RENT" | "SELL") => {
     if (!product) return;
     setActionLoading(true);
-    setActionError(null);
     try {
       const payload: Record<string, any> = {
         productId: product.id,
@@ -164,20 +162,19 @@ const ProductDetail = () => {
       }
       await Axios.post("/orders/checkout", payload);
       dispatch(loadWallet());
+      toast.success(
+        checkoutType === "RENT"
+          ? "Rental order placed! Escrow held securely."
+          : "Purchase successful! Escrow held securely."
+      );
       navigate("/dashboard/orders");
     } catch (err: unknown) {
-      if (isAxiosError(err)) {
-        setActionError(
-          err.response?.data?.message ||
-            err.response?.data?.error ||
-            err.message ||
-            "Failed to process order"
-        );
-      } else if (err instanceof Error) {
-        setActionError(err.message);
-      } else {
-        setActionError("Failed to process order");
-      }
+      const msg = isAxiosError(err)
+        ? err.response?.data?.message || err.response?.data?.error || err.message || "Failed to process order"
+        : err instanceof Error
+        ? err.message
+        : "Failed to process order";
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -218,9 +215,16 @@ const ProductDetail = () => {
         );
       case "AUCTION":
         return (
-          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-orange-600 text-white shadow-xs">
-            Live Auction
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-orange-600 text-white shadow-xs">
+              Live Auction
+            </span>
+            {auction?.status === "PENDING" && (
+              <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                ⏳ Pending Review
+              </span>
+            )}
+          </div>
         );
       case "SELL":
       default:
@@ -236,6 +240,7 @@ const ProductDetail = () => {
     if (!product) return null;
     if (product.type === "AUCTION") {
       const activeBid = auction?.currentBid ?? product.price;
+      const isPending = auction?.status === "PENDING";
       return (
         <div className="space-y-4 mt-4">
           <div className="flex items-baseline gap-2">
@@ -247,7 +252,12 @@ const ProductDetail = () => {
               {auction?.bids && auction.bids.length > 0 ? "Current Leading Bid" : "Starting Bid"}
             </span>
           </div>
-          {auction && (
+          {isPending ? (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-sm">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>Auction countdown will begin once reviewed and approved by an administrator.</span>
+            </div>
+          ) : auction && (
             <div className="space-y-3">
               <AuctionCountdown
                 endTime={auction.endTime}
@@ -522,24 +532,33 @@ const ProductDetail = () => {
             </Card>
           )}
 
-          {actionError && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{actionError}</span>
-            </div>
-          )}
-
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             {isOwner ? (
-              <Button disabled size="lg" className="font-medium">
-                {product.type === "AUCTION" ? "This is your auction listing" : "This is your listing"}
-              </Button>
+              <div className="flex flex-col gap-1">
+                <Button disabled size="lg" className="font-medium">
+                  {product.type === "AUCTION"
+                    ? auction?.status === "PENDING"
+                      ? "Awaiting Admin Approval"
+                      : "This is your auction listing"
+                    : "This is your listing"}
+                </Button>
+                {product.type === "AUCTION" && auction?.status === "PENDING" && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    Your auction is awaiting review. It will go live automatically upon approval.
+                  </p>
+                )}
+              </div>
             ) : product.status === "SOLD" ? (
               <Button disabled size="lg" className="font-medium">
                 Listing Sold Out
               </Button>
             ) : product.type === "AUCTION" ? (
-              auction?.status === "ENDED" ? (
+              auction?.status === "PENDING" ? (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-sm font-medium">
+                  <Clock className="w-4 h-4 shrink-0" />
+                  <span>⏳ Under Campus Review — Bidding will open once verified by administrators.</span>
+                </div>
+              ) : auction?.status === "ENDED" ? (
                 (auction.winnerId === user.id || auction.currentBidderId === user.id) ? (
                   <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-2">
                     <Link to="/dashboard/orders">

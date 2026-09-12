@@ -23,8 +23,6 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   RefreshCw,
-  CheckCircle2,
-  AlertCircle,
   Send,
   Plus,
   Landmark,
@@ -39,6 +37,7 @@ import {
   verifyPayment,
 } from '../wallet.api'
 import type { ILedgerEntry, LedgerType } from '../wallet.types'
+import { toast } from '@/components/ui/toast'
 
 interface WalletModalProps {
   open: boolean
@@ -61,32 +60,24 @@ export const WalletModal = ({
 
   const [topupAmount, setTopupAmount] = useState('')
   const [isTopupLoading, setIsTopupLoading] = useState(false)
-  const [topupSuccess, setTopupSuccess] = useState<string | null>(null)
-  const [topupError, setTopupError] = useState<string | null>(null)
 
   const [recipient, setRecipient] = useState('')
   const [transferAmount, setTransferAmount] = useState('')
   const [transferNote, setTransferNote] = useState('')
   const [isTransferLoading, setIsTransferLoading] = useState(false)
-  const [transferSuccess, setTransferSuccess] = useState<string | null>(null)
-  const [transferError, setTransferError] = useState<string | null>(null)
 
   const [upiId, setUpiId] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [isWithdrawLoading, setIsWithdrawLoading] = useState(false)
-  const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null)
-  const [withdrawError, setWithdrawError] = useState<string | null>(null)
 
   const [ledgerEntries, setLedgerEntries] = useState<ILedgerEntry[]>([])
   const [isLedgerLoading, setIsLedgerLoading] = useState(false)
-  const [ledgerError, setLedgerError] = useState<string | null>(null)
 
   const loadLedger = async () => {
     setIsLedgerLoading(true)
-    setLedgerError(null)
     const res = await fetchLedger()
     if (res.error) {
-      setLedgerError(res.error)
+      toast.error(res.error)
     } else if (res.entries) {
       setLedgerEntries(res.entries)
     }
@@ -97,12 +88,6 @@ export const WalletModal = ({
     if (open) {
       dispatch(loadWallet())
       loadLedger()
-      setTopupSuccess(null)
-      setTopupError(null)
-      setTransferSuccess(null)
-      setTransferError(null)
-      setWithdrawSuccess(null)
-      setWithdrawError(null)
     }
   }, [open, dispatch])
 
@@ -116,13 +101,11 @@ export const WalletModal = ({
     e.preventDefault()
     const amountNum = parseFloat(topupAmount)
     if (isNaN(amountNum) || amountNum <= 0) {
-      setTopupError('Please enter a valid amount greater than 0.')
+      toast.error('Please enter a valid amount greater than 0.')
       return
     }
 
     setIsTopupLoading(true)
-    setTopupError(null)
-    setTopupSuccess(null)
 
     const orderData = await createPaymentOrder(amountNum)
     if (
@@ -146,9 +129,9 @@ export const WalletModal = ({
           })
           setIsTopupLoading(false)
           if (verifyRes.error) {
-            setTopupError(verifyRes.error)
+            toast.error(verifyRes.error)
           } else {
-            setTopupSuccess(`₹${amountNum.toFixed(2)} added to your wallet via Razorpay!`)
+            toast.success(`₹${amountNum.toFixed(2)} added to your wallet via Razorpay!`)
             setTopupAmount('')
             dispatch(loadWallet())
             loadLedger()
@@ -176,9 +159,9 @@ export const WalletModal = ({
     setIsTopupLoading(false)
 
     if (res.error) {
-      setTopupError(res.error)
+      toast.error(res.error)
     } else {
-      setTopupSuccess(`₹${amountNum.toFixed(2)} added to your wallet via Razorpay Sandbox!`)
+      toast.success(`₹${amountNum.toFixed(2)} added to your wallet!`)
       setTopupAmount('')
       dispatch(loadWallet())
       loadLedger()
@@ -189,21 +172,19 @@ export const WalletModal = ({
     e.preventDefault()
     const amountNum = parseFloat(transferAmount)
     if (!recipient.trim()) {
-      setTransferError('Please enter recipient email or phone number.')
+      toast.error('Please enter recipient email or phone number.')
       return
     }
     if (isNaN(amountNum) || amountNum <= 0) {
-      setTransferError('Please enter a valid amount greater than 0.')
+      toast.error('Please enter a valid amount greater than 0.')
       return
     }
     if (amountNum > balance) {
-      setTransferError(`Insufficient balance. You have ₹${balance.toFixed(2)} available.`)
+      toast.error(`Insufficient balance. You have ₹${balance.toFixed(2)} available.`)
       return
     }
 
     setIsTransferLoading(true)
-    setTransferError(null)
-    setTransferSuccess(null)
 
     const res = await transferWallet(
       recipient.trim(),
@@ -213,9 +194,9 @@ export const WalletModal = ({
     setIsTransferLoading(false)
 
     if (res.error) {
-      setTransferError(res.error)
+      toast.error(res.error)
     } else {
-      setTransferSuccess(`₹${amountNum.toFixed(2)} transferred successfully!`)
+      toast.success(`₹${amountNum.toFixed(2)} transferred successfully!`)
       setRecipient('')
       setTransferAmount('')
       setTransferNote('')
@@ -230,30 +211,28 @@ export const WalletModal = ({
     const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/
 
     if (!upiRegex.test(upiId.trim())) {
-      setWithdrawError('Please enter a valid UPI address (e.g. username@okhdfcbank or phone@upi).')
+      toast.error('Please enter a valid UPI address (e.g. username@okhdfcbank or phone@upi).')
       return
     }
     if (isNaN(amountNum) || amountNum <= 0) {
-      setWithdrawError('Please enter a valid amount greater than 0.')
+      toast.error('Please enter a valid amount greater than 0.')
       return
     }
     if (amountNum > balance) {
-      setWithdrawError(`Insufficient wallet balance. You have ₹${balance.toFixed(2)} available.`)
+      toast.error(`Insufficient wallet balance. You have ₹${balance.toFixed(2)} available.`)
       return
     }
 
     setIsWithdrawLoading(true)
-    setWithdrawError(null)
-    setWithdrawSuccess(null)
 
     const res = await withdrawWallet(upiId.trim(), amountNum)
     setIsWithdrawLoading(false)
 
     if (res.error) {
-      setWithdrawError(res.error)
+      toast.error(res.error)
     } else {
-      setWithdrawSuccess(
-        `₹${amountNum.toFixed(2)} payout initiated to ${upiId.trim()}! Payout Ref: ${res.withdrawalId || 'PROCESSED'}`
+      toast.success(
+        `₹${amountNum.toFixed(2)} payout initiated to ${upiId.trim()}!`
       )
       setWithdrawAmount('')
       dispatch(loadWallet())
@@ -388,8 +367,6 @@ export const WalletModal = ({
                     }`}
                     onClick={() => {
                       setTopupAmount(amt.toString())
-                      setTopupError(null)
-                      setTopupSuccess(null)
                     }}
                   >
                     +₹{amt}
@@ -413,29 +390,11 @@ export const WalletModal = ({
                       step="any"
                       placeholder="Enter amount (e.g. 500)"
                       value={topupAmount}
-                      onChange={(e) => {
-                        setTopupAmount(e.target.value)
-                        setTopupError(null)
-                        setTopupSuccess(null)
-                      }}
+                      onChange={(e) => setTopupAmount(e.target.value)}
                       className="pl-7"
                     />
                   </div>
                 </div>
-
-                {topupError && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
-                    <AlertCircle className="size-4 shrink-0" />
-                    <span>{topupError}</span>
-                  </div>
-                )}
-
-                {topupSuccess && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
-                    <CheckCircle2 className="size-4 shrink-0" />
-                    <span>{topupSuccess}</span>
-                  </div>
-                )}
 
                 <Button
                   type="submit"
@@ -464,11 +423,7 @@ export const WalletModal = ({
                   type="text"
                   placeholder="student@college.edu or 9876543210"
                   value={recipient}
-                  onChange={(e) => {
-                    setRecipient(e.target.value)
-                    setTransferError(null)
-                    setTransferSuccess(null)
-                  }}
+                  onChange={(e) => setRecipient(e.target.value)}
                 />
               </div>
 
@@ -493,11 +448,7 @@ export const WalletModal = ({
                     max={balance}
                     placeholder="Enter amount"
                     value={transferAmount}
-                    onChange={(e) => {
-                      setTransferAmount(e.target.value)
-                      setTransferError(null)
-                      setTransferSuccess(null)
-                    }}
+                    onChange={(e) => setTransferAmount(e.target.value)}
                     className="pl-7"
                   />
                 </div>
@@ -515,20 +466,6 @@ export const WalletModal = ({
                   onChange={(e) => setTransferNote(e.target.value)}
                 />
               </div>
-
-              {transferError && (
-                <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
-                  <AlertCircle className="size-4 shrink-0" />
-                  <span>{transferError}</span>
-                </div>
-              )}
-
-              {transferSuccess && (
-                <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
-                  <CheckCircle2 className="size-4 shrink-0" />
-                  <span>{transferSuccess}</span>
-                </div>
-              )}
 
               <Button
                 type="submit"
@@ -572,11 +509,7 @@ export const WalletModal = ({
                   type="text"
                   placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm"
                   value={upiId}
-                  onChange={(e) => {
-                    setUpiId(e.target.value)
-                    setWithdrawError(null)
-                    setWithdrawSuccess(null)
-                  }}
+                  onChange={(e) => setUpiId(e.target.value)}
                   required
                 />
               </div>
@@ -602,30 +535,12 @@ export const WalletModal = ({
                     max={balance}
                     placeholder="Enter amount to withdraw"
                     value={withdrawAmount}
-                    onChange={(e) => {
-                      setWithdrawAmount(e.target.value)
-                      setWithdrawError(null)
-                      setWithdrawSuccess(null)
-                    }}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
                     className="pl-7"
                     required
                   />
                 </div>
               </div>
-
-              {withdrawError && (
-                <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
-                  <AlertCircle className="size-4 shrink-0" />
-                  <span>{withdrawError}</span>
-                </div>
-              )}
-
-              {withdrawSuccess && (
-                <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
-                  <CheckCircle2 className="size-4 shrink-0" />
-                  <span>{withdrawSuccess}</span>
-                </div>
-              )}
 
               <Button
                 type="submit"
@@ -669,13 +584,6 @@ export const WalletModal = ({
                 Refresh
               </Button>
             </div>
-
-            {ledgerError && (
-              <div className="flex items-center gap-2 p-2.5 rounded-lg text-xs font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900">
-                <AlertCircle className="size-4 shrink-0" />
-                <span>{ledgerError}</span>
-              </div>
-            )}
 
             {isLedgerLoading ? (
               <div className="py-12 flex flex-col items-center justify-center text-muted-foreground gap-2">

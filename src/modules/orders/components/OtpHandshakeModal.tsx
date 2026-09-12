@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { KeyRound, ShieldCheck, Copy, Check, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { KeyRound, ShieldCheck, Copy, Check, Loader2 } from "lucide-react";
 import type { AppDispatch } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
 import type { IOrder } from "../order.types";
@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 
 interface OtpHandshakeModalProps {
   isOpen: boolean;
@@ -36,15 +37,11 @@ export const OtpHandshakeModal = ({
   const dispatch = useDispatch<AppDispatch>();
   const [otpInput, setOtpInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setOtpInput("");
-      setError(null);
-      setSuccess(null);
       setCopied(false);
       setLoading(false);
     }
@@ -59,19 +56,18 @@ export const OtpHandshakeModal = ({
     if (otpValue && otpValue !== "------") {
       await navigator.clipboard.writeText(otpValue);
       setCopied(true);
+      toast.info("Verification code copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const handleVerify = async () => {
     if (otpInput.trim().length !== 6) {
-      setError("Please enter the complete 6-digit OTP");
+      toast.error("Please enter the complete 6-digit OTP");
       return;
     }
 
     setLoading(true);
-    setError(null);
-    setSuccess(null);
 
     const result =
       otpType === "PICKUP"
@@ -82,18 +78,18 @@ export const OtpHandshakeModal = ({
 
     if (result.success) {
       dispatch(loadWallet());
-      setSuccess(
+      const successMsg =
         result.message ||
-          (otpType === "PICKUP"
-            ? "Handover verified successfully! Funds transferred."
-            : "Return verified successfully! Deposit refunded.")
-      );
+        (otpType === "PICKUP"
+          ? "Handover verified successfully! Funds transferred."
+          : "Return verified successfully! Deposit refunded.");
+      toast.success(successMsg);
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 900);
+      }, 700);
     } else {
-      setError(result.error || "Failed to verify OTP");
+      toast.error(result.error || "Failed to verify OTP");
     }
   };
 
@@ -122,20 +118,6 @@ export const OtpHandshakeModal = ({
               : `Confirm in-person physical exchange for order #${order.orderNumber}`}
           </DialogDescription>
         </DialogHeader>
-
-        {error && (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs border border-emerald-200 dark:border-emerald-800">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <span>{success}</span>
-          </div>
-        )}
 
         {mode === "SHOW_BUYER_OTP" ? (
           <div className="space-y-4 pt-1">
@@ -204,9 +186,8 @@ export const OtpHandshakeModal = ({
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, "").slice(0, 6);
                   setOtpInput(val);
-                  setError(null);
                 }}
-                disabled={loading || Boolean(success)}
+                disabled={loading}
                 autoFocus
                 className="text-center font-mono text-3xl font-extrabold tracking-[0.35em] h-14"
               />
@@ -222,14 +203,14 @@ export const OtpHandshakeModal = ({
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                disabled={loading || Boolean(success)}
+                disabled={loading}
               >
                 Cancel
               </Button>
               <Button
                 type="button"
                 onClick={handleVerify}
-                disabled={otpInput.trim().length !== 6 || loading || Boolean(success)}
+                disabled={otpInput.trim().length !== 6 || loading}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

@@ -14,6 +14,7 @@ import {
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"
+import { toast } from "@/components/ui/toast"
 
 type SignupFormData = {
   name: string
@@ -27,15 +28,22 @@ type SignupFormData = {
 const SignupForm = () => {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
-  const [serverError, setServerError] = useState("")
   const [loading, setLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
     setValue,
   } = useForm<SignupFormData>()
+
+  const onInvalid = (formErrors: any) => {
+    const firstError = Object.values(formErrors)[0] as any
+    if (firstError?.message) {
+      toast.error(firstError.message)
+    } else {
+      toast.error("Please fill in all required fields.")
+    }
+  }
 
   const onSubmit = async (data: SignupFormData) => {
     const token = localStorage.getItem("signupToken")
@@ -43,7 +51,6 @@ const SignupForm = () => {
       navigate("/auth/signup")
       return
     }
-    setServerError("")
     setLoading(true)
     try {
       const response = await Axios.post(
@@ -51,14 +58,30 @@ const SignupForm = () => {
         { ...data },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201 || response.data?.success) {
         localStorage.removeItem("signupToken")
+        const authToken = response.data?.data?.token || response.data?.token
+        if (authToken) {
+          localStorage.setItem("authToken", authToken)
+        }
+        toast.success("Account created successfully! Welcome to College Marketplace.")
         navigate("/auth/thank-you")
       }
     } catch (error: any) {
-      setServerError(
-        error?.response?.data?.error || error?.response?.data?.message || "Signup failed. Please try again."
-      )
+      const errorMsg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Signup failed. Please try again."
+
+      if (
+        errorMsg.toLowerCase().includes("already registered") ||
+        errorMsg.toLowerCase().includes("already associated") ||
+        errorMsg.toLowerCase().includes("already exists")
+      ) {
+        localStorage.removeItem("signupToken")
+      }
+
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
@@ -82,7 +105,7 @@ const SignupForm = () => {
         </div>
 
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, onInvalid)}
           className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"
         >
           <div className="flex flex-col gap-1">
@@ -94,7 +117,6 @@ const SignupForm = () => {
               placeholder="John Doe"
               {...register("name", { required: "Name is required" })}
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1 relative">
@@ -106,7 +128,7 @@ const SignupForm = () => {
               placeholder="••••••••"
               {...register("password", {
                 required: "Password is required",
-                minLength: { value: 6, message: "Minimum 6 characters" },
+                minLength: { value: 6, message: "Password must be at least 6 characters" },
               })}
             />
             <div
@@ -115,9 +137,6 @@ const SignupForm = () => {
             >
               {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
             </div>
-            {errors.password && (
-              <p className="text-red-500 text-sm">{errors.password.message}</p>
-            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -129,9 +148,6 @@ const SignupForm = () => {
               placeholder="ABC University"
               {...register("college", { required: "College is required" })}
             />
-            {errors.college && (
-              <p className="text-red-500 text-sm">{errors.college.message}</p>
-            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -143,9 +159,6 @@ const SignupForm = () => {
               placeholder="Computer Science"
               {...register("branch", { required: "Branch is required" })}
             />
-            {errors.branch && (
-              <p className="text-red-500 text-sm">{errors.branch.message}</p>
-            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -161,7 +174,6 @@ const SignupForm = () => {
                 <SelectItem value="4th Year">4th Year</SelectItem>
               </SelectContent>
             </Select>
-            {errors.year && <p className="text-red-500 text-sm">Year is required</p>}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -179,23 +191,14 @@ const SignupForm = () => {
                 },
               })}
             />
-            {errors.phone && (
-              <p className="text-red-500 text-sm">{errors.phone.message}</p>
-            )}
           </div>
-
-          {serverError && (
-            <div className="col-span-full">
-              <p className="text-red-500 text-sm text-center">{serverError}</p>
-            </div>
-          )}
 
           <div className="col-span-full pt-4">
             <Button
               size="lg"
               type="submit"
               disabled={loading}
-              className="w-full text-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white py-3"
+              className="w-full text-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white py-3 cursor-pointer"
             >
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>

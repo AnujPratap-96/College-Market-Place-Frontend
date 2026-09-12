@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchDisputes, resolveDispute } from '../admin.api'
 import type { IDisputedOrder } from '../admin.types'
+import { toast } from '@/components/ui/toast'
 import {
   Dialog,
   DialogContent,
@@ -26,16 +27,14 @@ export const DisputeArbitrationQueue = () => {
   const [actionType, setActionType] = useState<'REFUND_BUYER' | 'RELEASE_SELLER' | null>(null)
   const [resolutionNote, setResolutionNote] = useState<string>('')
   const [submitting, setSubmitting] = useState<boolean>(false)
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const loadDisputes = async () => {
     setLoading(true)
-    setFeedback(null)
     const res = await fetchDisputes()
     if (res.disputes) {
       setDisputes(res.disputes)
     } else if (res.error) {
-      setFeedback({ type: 'error', text: res.error })
+      toast.error(res.error)
     }
     setLoading(false)
   }
@@ -59,19 +58,17 @@ export const DisputeArbitrationQueue = () => {
     if (!selectedOrder || !actionType) return
 
     setSubmitting(true)
-    setFeedback(null)
 
     const res = await resolveDispute(selectedOrder.id, actionType, resolutionNote)
     if (res.success) {
-      setFeedback({
-        type: 'success',
-        text: `Order #${selectedOrder.orderNumber} resolved with decision: ${actionType.replace('_', ' ')}`,
-      })
+      toast.success(
+        `Order #${selectedOrder.orderNumber} resolved with decision: ${actionType.replace('_', ' ')}`
+      )
       setSelectedOrder(null)
       setActionType(null)
       loadDisputes()
     } else if (res.error) {
-      setFeedback({ type: 'error', text: res.error })
+      toast.error(res.error)
     }
     setSubmitting(false)
   }
@@ -107,19 +104,6 @@ export const DisputeArbitrationQueue = () => {
           <RefreshCw size={14} /> Refresh Queue ({disputes.length})
         </button>
       </div>
-
-      {feedback && (
-        <div
-          className={`flex items-center gap-2 p-4 rounded-xl text-sm font-medium border ${
-            feedback.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-              : 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
-          }`}
-        >
-          {feedback.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
-          {feedback.text}
-        </div>
-      )}
 
       {disputes.length === 0 ? (
         <div className="bg-card border rounded-2xl p-12 text-center space-y-3">
