@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Lock,
   Gavel,
+  ShieldCheck,
 } from 'lucide-react'
 
 export const AdminDashboard = () => {
@@ -77,9 +78,10 @@ export const AdminDashboard = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
+      <div className="relative overflow-hidden rounded-3xl border border-orange-500/20 bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-transparent p-6 sm:p-8 shadow-xs">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+          <div className="p-3 rounded-2xl bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/20">
             <ShieldAlert size={28} />
           </div>
           <div>
@@ -98,9 +100,35 @@ export const AdminDashboard = () => {
             Live System Active
           </span>
         </div>
+        </div>
+        <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl pointer-events-none" />
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {[
+          { label: 'Escrow Health', value: 'Protected', icon: ShieldCheck },
+          { label: 'Dispute Desk', value: 'Ready', icon: AlertTriangle },
+          { label: 'Moderation Queue', value: 'Live', icon: FileCheck },
+          { label: 'Auction Review', value: 'Active', icon: Gavel },
+        ].map((metric) => {
+          const Icon = metric.icon
+          return (
+            <div key={metric.label} className="rounded-2xl border border-border/70 bg-card/80 backdrop-blur-md p-4 shadow-xs">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{metric.label}</p>
+                  <p className="mt-1 text-xl font-black text-foreground">{metric.value}</p>
+                </div>
+                <div className="rounded-xl bg-orange-500/10 p-2 text-orange-600 dark:text-orange-400">
+                  <Icon size={18} />
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto rounded-2xl border border-border/70 bg-card/80 backdrop-blur-md p-2 shadow-xs">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id
           return (
@@ -110,7 +138,7 @@ export const AdminDashboard = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                 isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-500/20'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >

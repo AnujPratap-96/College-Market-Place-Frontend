@@ -71,77 +71,79 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="space-y-6 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-700 max-w-md mx-auto">
-      <div className="text-center">
-        <div className="bg-orange-100 dark:bg-orange-500/10 p-3 rounded-full inline-flex mb-3">
-          <KeyRound className="w-6 h-6 text-orange-500" />
+    <div className="space-y-5 w-full">
+      <div className="text-center space-y-1">
+        <div className="inline-flex p-3 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 mb-1">
+          <KeyRound className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Set New Password</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Choose a strong password for your account.
+        <h2 className="text-xl font-bold text-foreground">Create New Password</h2>
+        <p className="text-xs text-muted-foreground">
+          Choose a strong password for your verified campus account.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
-        <div>
-          <Label htmlFor="password">New Password</Label>
-          <div className="relative mt-1">
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-xs font-semibold text-foreground">New Password</Label>
+          <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
-              className="pr-10"
+              className="pr-10 h-11 rounded-xl bg-background/50 border-border/70 focus-visible:ring-orange-500"
               {...register("password", {
                 required: "Password is required",
                 minLength: { value: 6, message: "Minimum 6 characters" },
               })}
             />
-            <div
+            <button
+              type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground"
+              className="absolute top-1/2 right-3.5 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
             >
-              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
-            </div>
+              {showPassword ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
+            </button>
           </div>
         </div>
 
-        <div>
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <div className="relative mt-1">
+        <div className="space-y-1.5">
+          <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground">Confirm New Password</Label>
+          <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirm ? "text" : "password"}
               placeholder="••••••••"
-              className="pr-10"
+              className="pr-10 h-11 rounded-xl bg-background/50 border-border/70 focus-visible:ring-orange-500"
               {...register("confirmPassword", {
                 required: "Please confirm your password",
                 validate: (val) => val === watch("password") || "Passwords do not match",
               })}
             />
-            <div
+            <button
+              type="button"
               onClick={() => setShowConfirm((p) => !p)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted-foreground"
+              className="absolute top-1/2 right-3.5 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
             >
-              {showConfirm ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
-            </div>
+              {showConfirm ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
+            </button>
           </div>
         </div>
 
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+          className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-md shadow-orange-500/20 cursor-pointer transition-all"
         >
-          {loading ? "Resetting..." : "Reset Password"}
+          {loading ? "Updating Password..." : "Update Password & Sign In"}
         </Button>
       </form>
 
-      <div className="text-center">
+      <div className="text-center pt-1">
         <Link
           to="/auth/login"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
         >
-          Back to Login
+          Return to Sign In
         </Link>
       </div>
     </div>

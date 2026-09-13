@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -11,115 +11,95 @@ import {
   ShieldCheck,
   ArrowRight,
   Sparkles,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { fetchProducts } from "@/modules/products/product.api";
+import { fetchAuctions } from "@/modules/auctions/auction.api";
+import type { IProduct } from "@/modules/products/product.types";
+import type { IAuction } from "@/modules/auctions/auction.types";
 
 const CATEGORIES = [
   { id: "all", label: "All Items", icon: Sparkles },
   { id: "books", label: "Books & Notes", icon: BookOpen },
   { id: "electronics", label: "Laptops & Gadgets", icon: Laptop },
-  { id: "mobility", label: "Cycles & Mobility", icon: Bike },
-  { id: "hostel", label: "Hostel Essentials", icon: Armchair },
+  { id: "cycles", label: "Cycles & Mobility", icon: Bike },
+  { id: "furniture", label: "Hostel Essentials", icon: Armchair },
   { id: "services", label: "Campus Gigs & Tutoring", icon: GraduationCap },
   { id: "auctions", label: "Live Move-Out Auctions", icon: Gavel },
 ];
 
-const SAMPLE_ITEMS = [
-  {
-    id: 1,
-    title: "Engineering Mathematics (Vol 1 & 2) - Higher Engg Math",
-    category: "books",
-    price: 450,
-    originalPrice: 1200,
-    type: "SELL",
-    image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80",
-    campus: "IIT Delhi",
-    condition: "Like New",
-    seller: "Karan V. (Mech '26)",
-  },
-  {
-    id: 2,
-    title: "Casio FX-991CW Scientific Calculator (Non-Programmable)",
-    category: "electronics",
-    price: 850,
-    originalPrice: 1550,
-    type: "SELL",
-    image: "https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=600&auto=format&fit=crop&q=80",
-    campus: "BITS Pilani",
-    condition: "Mint Condition",
-    seller: "Ananya D. (ECE '25)",
-  },
-  {
-    id: 3,
-    title: "Hero Sprint 26T Mountain Bicycle (With Lock & Bell)",
-    category: "mobility",
-    price: 2400,
-    originalPrice: 6500,
-    type: "SELL",
-    image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80",
-    campus: "NIT Trichy",
-    condition: "Good Condition",
-    seller: "Rohan M. (Hostel 6)",
-  },
-  {
-    id: 4,
-    title: "Senior Clearance: Bajaj 36L Room Air Cooler (Hostel Room)",
-    category: "auctions",
-    price: 1800,
-    originalPrice: 4200,
-    type: "AUCTION",
-    image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=600&auto=format&fit=crop&q=80",
-    campus: "Delhi University",
-    condition: "Fully Working",
-    seller: "Outgoing 4th Year Senior",
-    bids: 6,
-  },
-  {
-    id: 5,
-    title: "Ergonomic Mesh Study Chair with Lumbar Support",
-    category: "hostel",
-    price: 1200,
-    originalPrice: 3800,
-    type: "SELL",
-    image: "https://images.unsplash.com/photo-1580481077195-c54625b0445a?w=600&auto=format&fit=crop&q=80",
-    campus: "IIT Bombay",
-    condition: "1 Year Used",
-    seller: "Vikas P. (Hostel 12)",
-  },
-  {
-    id: 6,
-    title: "1-on-1 Full Stack Web Dev & DSA Mentorship (1 Hr Session)",
-    category: "services",
-    price: 350,
-    originalPrice: 1000,
-    type: "SERVICE",
-    image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop&q=80",
-    campus: "IIT Roorkee",
-    condition: "4.9 ★ (32 reviews)",
-    seller: "Siddharth (Google Intern)",
-  },
-];
-
-const CategoryShowcase = () => {
+export const CategoryShowcase = () => {
   const [activeTab, setActiveTab] = useState("all");
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [auctions, setAuctions] = useState<IAuction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredItems =
-    activeTab === "all"
-      ? SAMPLE_ITEMS
-      : SAMPLE_ITEMS.filter((item) => item.category === activeTab);
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadData() {
+      setLoading(true);
+      try {
+        const [prodRes, aucRes] = await Promise.all([
+          fetchProducts(),
+          fetchAuctions({ status: "ACTIVE" }),
+        ]);
+
+        if (isMounted) {
+          if (prodRes.products && prodRes.products.length > 0) {
+            // Limit to authentic 12 products (between 10-15 as requested)
+            setProducts(prodRes.products.slice(0, 12));
+          }
+          if (aucRes.auctions && aucRes.auctions.length > 0) {
+            setAuctions(aucRes.auctions);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading authentic items for showcase:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Filter products by activeTab
+  const filteredProducts = products.filter((prod) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "auctions") return prod.type === "AUCTION";
+    if (activeTab === "cycles") return prod.category === "cycles" || prod.category === "mobility";
+    if (activeTab === "furniture") return prod.category === "furniture" || prod.category === "essentials";
+    return prod.category?.toLowerCase() === activeTab.toLowerCase();
+  });
+
+  // Calculate remaining time for auction item
+  const getAuctionTimeRemaining = (prodId: string) => {
+    const auc = auctions.find((a) => a.productId === prodId || a.product?.id === prodId);
+    if (!auc || !auc.endTime) return null;
+    const diff = new Date(auc.endTime).getTime() - Date.now();
+    if (diff <= 0) return "Ended";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${mins}m left`;
+  };
 
   return (
     <section id="explore" className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
         <Badge variant="outline" className="px-3 py-1 text-xs font-semibold text-orange-600 border-orange-400/40 bg-orange-500/10">
-          CAMPUS DISCOVERY
+          CAMPUS LIVE DISCOVERY
         </Badge>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground">
-          What Students Are Trading Today
+          Authentic Campus Listings Available Now
         </h2>
         <p className="text-muted-foreground text-base sm:text-lg">
-          From last-minute semester books to cycles and move-out clearances — everything is priced by students, for students.
+          Live products and senior move-out clearance auctions currently listed by verified peers.
         </p>
 
         {/* Category Pills */}
@@ -145,97 +125,131 @@ const CategoryShowcase = () => {
         </div>
       </div>
 
-      {/* Grid of items */}
-      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {filteredItems.map((item) => (
-            <motion.div
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              key={item.id}
-              className="rounded-2xl border border-border/80 bg-card overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-orange-500/30 transition-all group"
-            >
-              <div>
-                <div className="relative aspect-16/10 overflow-hidden bg-muted">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge
-                      className={`text-[10px] font-bold ${
-                        item.type === "AUCTION"
-                          ? "bg-orange-600 text-white"
-                          : item.type === "SERVICE"
-                          ? "bg-purple-600 text-white"
-                          : "bg-blue-600 text-white"
-                      }`}
-                    >
-                      {item.type === "AUCTION"
-                        ? "Live Auction"
-                        : item.type === "SERVICE"
-                        ? "Campus Gig"
-                        : "For Sale"}
-                    </Badge>
-                  </div>
-                  <span className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-black/75 text-white backdrop-blur-xs">
-                    {item.condition}
-                  </span>
-                </div>
-
-                <div className="p-5 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="font-medium text-orange-600 dark:text-orange-400">
-                      {item.campus}
-                    </span>
-                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Escrow Protected
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-base text-foreground leading-snug line-clamp-2 group-hover:text-orange-500 transition-colors">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-xs text-muted-foreground">
-                    Listed by: <span className="font-medium text-foreground">{item.seller}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-5 pt-0">
-                <div className="flex items-baseline justify-between border-t border-border/60 pt-3">
-                  <div>
-                    <span className="text-xs text-muted-foreground line-through mr-2">
-                      ₹{item.originalPrice}
-                    </span>
-                    <span className="text-xl font-extrabold text-foreground font-mono">
-                      ₹{item.price}
-                    </span>
-                    {item.type === "AUCTION" && (
-                      <span className="text-[11px] font-bold text-orange-500 ml-2">
-                        ({item.bids} bids)
-                      </span>
-                    )}
-                  </div>
-
-                  <Button
-                    size="sm"
-                    className="bg-orange-500/10 hover:bg-orange-500 text-orange-600 hover:text-white font-semibold transition-all cursor-pointer"
-                    asChild
-                  >
-                    <Link to="/auth/signup">View Details</Link>
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
+      {/* Loading Skeletons */}
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/70 bg-card p-4 space-y-4 animate-pulse">
+              <div className="aspect-16/10 rounded-xl bg-muted" />
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/2" />
+              <div className="h-8 bg-muted rounded pt-4" />
+            </div>
           ))}
-        </AnimatePresence>
-      </motion.div>
+        </div>
+      )}
+
+      {/* Grid of authentic products */}
+      {!loading && (
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
+            {filteredProducts.map((item) => {
+              const auctionTime = item.type === "AUCTION" ? getAuctionTimeRemaining(item.id) : null;
+              const sellerName = item.owner?.name || "Campus Student";
+              const sellerCollege = item.owner?.college || "University Campus";
+
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.25 }}
+                  key={item.id}
+                  className="rounded-2xl border border-border/80 bg-card overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-xl hover:border-orange-500/30 transition-all group"
+                >
+                  <div>
+                    <div className="relative aspect-16/10 overflow-hidden bg-muted">
+                      <img
+                        src={item.imageUrl || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80"}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <Badge
+                          className={`text-[10px] font-bold ${
+                            item.type === "AUCTION"
+                              ? "bg-orange-600 text-white"
+                              : item.type === "SERVICE"
+                              ? "bg-purple-600 text-white"
+                              : item.type === "SUBSCRIPTION"
+                              ? "bg-emerald-600 text-white"
+                              : "bg-blue-600 text-white"
+                          }`}
+                        >
+                          {item.type === "AUCTION"
+                            ? "Live Auction"
+                            : item.type === "SERVICE"
+                            ? "Campus Service"
+                            : item.type === "SUBSCRIPTION"
+                            ? "Meal Plan"
+                            : "For Sale"}
+                        </Badge>
+                      </div>
+
+                      {auctionTime && (
+                        <span className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-black/80 text-amber-300 backdrop-blur-xs flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {auctionTime}
+                        </span>
+                      )}
+
+                      {!auctionTime && item.serviceDuration && (
+                        <span className="absolute bottom-2.5 right-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-black/75 text-white backdrop-blur-xs">
+                          {item.serviceDuration}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-5 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="font-semibold text-orange-600 dark:text-orange-400">
+                          {sellerCollege}
+                        </span>
+                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                          <ShieldCheck className="w-3.5 h-3.5" /> Escrow Protected
+                        </span>
+                      </div>
+
+                      <h3 className="font-bold text-base text-foreground leading-snug line-clamp-2 group-hover:text-orange-500 transition-colors">
+                        {item.title}
+                      </h3>
+
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {item.description}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground pt-1">
+                        Seller: <span className="font-medium text-foreground">{sellerName}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 pt-0">
+                    <div className="flex items-baseline justify-between border-t border-border/60 pt-3">
+                      <div>
+                        <span className="text-xs text-muted-foreground block">
+                          {item.type === "AUCTION" ? "Starting Bid" : "Price"}
+                        </span>
+                        <span className="text-xl font-extrabold text-foreground font-mono">
+                          ₹{item.price}
+                        </span>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        className="bg-orange-500/10 hover:bg-orange-500 text-orange-600 hover:text-white font-semibold transition-all cursor-pointer"
+                        asChild
+                      >
+                        <Link to="/auth/signup">View Details</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* Explore More CTA */}
       <div className="text-center mt-12">
@@ -245,7 +259,7 @@ const CategoryShowcase = () => {
           asChild
         >
           <Link to="/auth/signup">
-            <span>Explore All 500+ Campus Listings</span>
+            <span>Explore All Campus Listings</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </Button>

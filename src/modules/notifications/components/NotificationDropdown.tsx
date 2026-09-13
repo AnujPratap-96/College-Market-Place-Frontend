@@ -7,9 +7,10 @@ import {
   AlertTriangle,
   MessageSquare,
   BellOff,
+  Trash2,
 } from 'lucide-react';
 import type { AppDispatch, RootState } from '@/store/store';
-import { markAllRead, markAsRead } from '@/store/notificationSlice';
+import { clearNotifications, markAllRead, markAsRead, removeNotification } from '@/store/notificationSlice';
 import type {
   INotification,
   NotificationType,
@@ -81,7 +82,7 @@ export const NotificationDropdown = ({
   const handleItemClick = (notification: INotification) => {
     dispatch(markAsRead(notification.id));
     if (notification.link) {
-      navigate(notification.link);
+      navigate(notification.link, { state: notification.linkState });
     }
     onClose?.();
   };
@@ -104,6 +105,16 @@ export const NotificationDropdown = ({
             </span>
           )}
         </div>
+        <div className="flex items-center gap-3">
+        {notifications.length > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); dispatch(clearNotifications()); }}
+            className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+          >
+            Clear all
+          </button>
+        )}
         {unreadCount > 0 && (
           <button
             type="button"
@@ -113,6 +124,7 @@ export const NotificationDropdown = ({
             Mark all read
           </button>
         )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto divide-y divide-border/60">
@@ -124,14 +136,13 @@ export const NotificationDropdown = ({
           </div>
         ) : (
           notifications.map((n) => (
-            <button
+            <div
               key={n.id}
-              type="button"
-              onClick={() => handleItemClick(n)}
               className={`w-full text-left flex items-start gap-3 p-3.5 transition-colors hover:bg-muted/60 cursor-pointer ${
                 !n.isRead ? 'bg-orange-50/50 dark:bg-orange-950/20' : ''
               }`}
             >
+              <button type="button" onClick={() => handleItemClick(n)} className="flex min-w-0 flex-1 items-start gap-3 text-left">
               <div className="p-2 rounded-lg shrink-0 bg-muted">
                 {renderIcon(n.type)}
               </div>
@@ -154,10 +165,14 @@ export const NotificationDropdown = ({
                   {n.message}
                 </p>
               </div>
+              </button>
+              <button type="button" aria-label="Delete notification" onClick={() => dispatch(removeNotification(n.id))} className="mt-1 rounded p-1 text-muted-foreground hover:bg-muted hover:text-destructive shrink-0">
+                <Trash2 className="size-3.5" />
+              </button>
               {!n.isRead && (
                 <span className="size-2 mt-1.5 rounded-full bg-orange-500 shrink-0" />
               )}
-            </button>
+            </div>
           ))
         )}
       </div>

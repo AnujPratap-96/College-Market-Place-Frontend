@@ -94,33 +94,38 @@ export const Subscriptions = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/60">
         <div>
-          <div className="flex items-center gap-2">
-            <CalendarCheck className="w-7 h-7 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Subscriptions & Daily Services
-            </h1>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 mb-1">
+            <CalendarCheck className="w-3.5 h-3.5" />
+            <span>Recurring Hostel Services</span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage tiffin and recurring plans, pause for vacations with instant pro-rata refunds, or check fulfillment rosters.
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            Subscriptions & Meal Plans
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Manage hostel tiffin deliveries, laundry services, and vacation pause credits.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={() => loadData(true)}
             disabled={loading || refreshing}
-            className="h-9 gap-1.5"
+            className="h-10 px-4 rounded-xl border-border/70 hover:bg-muted/70 font-semibold text-xs gap-1.5"
           >
             <RefreshCw
-              className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
             />
             <span>Refresh</span>
           </Button>
-          <Button asChild size="sm" className="h-9 gap-1.5">
+          <Button
+            asChild
+            size="sm"
+            className="h-10 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold text-xs shadow-md shadow-orange-500/20 gap-1.5 cursor-pointer"
+          >
             <Link to="/dashboard">
               <Plus className="w-4 h-4" />
               <span>Explore Plans</span>
@@ -129,15 +134,28 @@ export const Subscriptions = () => {
         </div>
       </div>
 
+      {/* Vacation Pause Banner */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1 max-w-xl">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+            <Repeat className="w-3.5 h-3.5" />
+            <span>Semester Break or Heading Home?</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Pause your tiffin or laundry service for any number of days. Your wallet is automatically credited with a pro-rata refund for missed dates.
+          </p>
+        </div>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="my" className="gap-2">
+        <TabsList className="grid w-full max-w-md grid-cols-2 p-1 bg-muted/80 rounded-2xl h-11 border border-border/60">
+          <TabsTrigger value="my" className="gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs">
             <Repeat className="w-4 h-4" />
-            <span>My Subscriptions ({subscriptions.length})</span>
+            <span>My Plans ({subscriptions.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="manifest" className="gap-2">
+          <TabsTrigger value="manifest" className="gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs">
             <Truck className="w-4 h-4" />
-            <span>Provider Manifest</span>
+            <span>Hostel Manifest</span>
           </TabsTrigger>
         </TabsList>
 
@@ -147,25 +165,25 @@ export const Subscriptions = () => {
               {[1, 2].map((n) => (
                 <div
                   key={n}
-                  className="h-44 rounded-xl bg-muted/40 animate-pulse border border-border/50"
+                  className="h-44 rounded-2xl bg-card/60 animate-pulse border border-border/60"
                 />
               ))}
             </div>
           ) : subscriptions.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
-                <ShoppingBag className="w-6 h-6" />
+            <div className="rounded-3xl border border-border/70 bg-card/75 backdrop-blur-md p-12 text-center space-y-4 max-w-md mx-auto shadow-xs">
+              <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mx-auto">
+                <ShoppingBag className="w-7 h-7" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-semibold text-foreground">
+                <h3 className="text-lg font-bold text-foreground">
                   No Active Subscriptions
                 </h3>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  You are not currently subscribed to any recurring food mess, laundry, or newspaper deliveries.
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                  You are not currently subscribed to any daily hostel tiffin, laundry, or recurring campus meal deliveries.
                 </p>
               </div>
-              <Button asChild size="sm" className="gap-1.5">
-                <Link to="/dashboard">Browse Campus Services</Link>
+              <Button asChild size="sm" className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold">
+                <Link to="/dashboard">Browse Campus Plans</Link>
               </Button>
             </div>
           ) : (

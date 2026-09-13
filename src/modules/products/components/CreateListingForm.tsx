@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, Gavel } from "lucide-react";
+import { Loader2, Gavel, Tag, Clock, Sparkles, Repeat } from "lucide-react";
 import { ImageUploader } from "@/components/ui/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { createProduct } from "../product.api";
 import type { ProductType, SubscriptionFrequency } from "../product.types";
 import { toast } from "@/components/ui/toast";
@@ -137,30 +130,46 @@ const CreateListingForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle>Listing Information</CardTitle>
-          <CardDescription>
-            Specify the listing type, details, pricing, and availability.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="bg-card/85 backdrop-blur-md rounded-3xl border border-border/70 p-6 sm:p-8 shadow-xs space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Listing Information</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Select the listing model, add details, specify pricing, and set availability.
+          </p>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="listing-type">Listing Type *</Label>
-            <Select value={type} onValueChange={(val: ProductType) => setType(val)}>
-              <SelectTrigger id="listing-type" className="w-full">
-                <SelectValue placeholder="Select listing type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="SELL">Sell Item (One-time purchase)</SelectItem>
-                <SelectItem value="RENT">Rent Item (Daily/weekly rental)</SelectItem>
-                <SelectItem value="SERVICE">Campus Service / Task (Freelance, errands, help)</SelectItem>
-                <SelectItem value="SUBSCRIPTION">Recurring Delivery Plan (Mess, tiffin, laundry)</SelectItem>
-                <SelectItem value="AUCTION">Live Auction (Senior Move-Out Sale)</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Segmented Listing Type Chips */}
+        <div className="space-y-2">
+          <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Listing Type *</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+            {[
+              { id: "SELL", label: "Sell Item", icon: Tag, desc: "One-time" },
+              { id: "RENT", label: "Rent Item", icon: Clock, desc: "Daily/weekly" },
+              { id: "SERVICE", label: "Campus Gig", icon: Sparkles, desc: "Tutoring/task" },
+              { id: "SUBSCRIPTION", label: "Meal/Plan", icon: Repeat, desc: "Hostel tiffin" },
+              { id: "AUCTION", label: "Move-Out", icon: Gavel, desc: "24h auction" },
+            ].map((item) => {
+              const Icon = item.icon;
+              const isSelected = type === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setType(item.id as ProductType)}
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-orange-500/15 border-orange-500 text-orange-600 dark:text-orange-400 font-bold shadow-xs ring-1 ring-orange-500/30"
+                      : "bg-background/50 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <Icon className="w-5 h-5 mb-1" />
+                  <span className="text-xs">{item.label}</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">{item.desc}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
 
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
@@ -386,18 +395,21 @@ const CreateListingForm = () => {
             onChange={setImageUrl}
           />
 
-          <div className="flex gap-3 pt-4 border-t border-border/50">
-            <Button type="submit" disabled={loading} className="gap-2">
+          <div className="flex items-center gap-3 pt-4 border-t border-border/60">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="gap-2 h-11 px-6 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-md shadow-orange-500/20 cursor-pointer transition-all"
+            >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? "Creating Listing..." : "Create Listing"}
+              {loading ? "Publishing to Campus..." : "Publish Listing"}
             </Button>
-            <Button type="button" variant="outline" asChild>
+            <Button type="button" variant="outline" asChild className="rounded-xl h-11 px-5">
               <Link to="/dashboard">Cancel</Link>
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </form>
+        </div>
+      </form>
   );
 };
 

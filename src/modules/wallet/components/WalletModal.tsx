@@ -29,12 +29,10 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import {
-  topupWallet,
   transferWallet,
   fetchLedger,
   withdrawWallet,
   createPaymentOrder,
-  verifyPayment,
 } from '../wallet.api'
 import type { ILedgerEntry, LedgerType } from '../wallet.types'
 import { toast } from '@/components/ui/toast'
@@ -108,6 +106,11 @@ export const WalletModal = ({
     setIsTopupLoading(true)
 
     const orderData = await createPaymentOrder(amountNum)
+    if (orderData.error || !orderData.orderId || !orderData.keyId) {
+      setIsTopupLoading(false)
+      toast.error(orderData.error || 'Razorpay payment is unavailable.')
+      return
+    }
     if (
       orderData.keyId &&
       !orderData.keyId.includes('placeholder') &&
@@ -120,21 +123,14 @@ export const WalletModal = ({
         name: 'College Marketplace',
         description: 'Student Wallet Recharge',
         order_id: orderData.orderId,
-        handler: async (response: any) => {
-          const verifyRes = await verifyPayment({
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-            amount: amountNum,
-          })
+        handler: async (_response: any) => {
+          // Wallet credit is performed only by the verified Razorpay webhook.
+          await Promise.resolve()
           setIsTopupLoading(false)
-          if (verifyRes.error) {
-            toast.error(verifyRes.error)
-          } else {
+          {
             toast.success(`₹${amountNum.toFixed(2)} added to your wallet via Razorpay!`)
             setTopupAmount('')
-            dispatch(loadWallet())
-            loadLedger()
+            window.setTimeout(() => { dispatch(loadWallet()); loadLedger() }, 2500)
           }
         },
         prefill: {
@@ -155,7 +151,7 @@ export const WalletModal = ({
       return
     }
 
-    const res = await topupWallet(amountNum)
+    const res = { error: 'Razorpay payment is unavailable. Please try again later.' }
     setIsTopupLoading(false)
 
     if (res.error) {

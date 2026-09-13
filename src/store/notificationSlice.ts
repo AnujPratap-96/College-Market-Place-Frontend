@@ -23,17 +23,23 @@ const notificationSlice = createSlice({
         title: string;
         message: string;
         link?: string;
+        linkState?: { userId?: string; productId?: string };
+        eventId?: string;
       }>
     ) => {
+      if (action.payload.eventId && state.notifications.some((n) => n.id === action.payload.eventId)) {
+        return;
+      }
       const newNotification: INotification = {
         id:
-          typeof crypto !== 'undefined' && crypto.randomUUID
+          action.payload.eventId || (typeof crypto !== 'undefined' && crypto.randomUUID
             ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            : `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`),
         type: action.payload.type,
         title: action.payload.title,
         message: action.payload.message,
         link: action.payload.link,
+        linkState: action.payload.linkState,
         isRead: false,
         createdAt: new Date().toISOString(),
       };
@@ -57,6 +63,11 @@ const notificationSlice = createSlice({
       state.notifications = [];
       state.unreadCount = 0;
     },
+    removeNotification: (state, action: PayloadAction<string>) => {
+      const removed = state.notifications.find((n) => n.id === action.payload);
+      state.notifications = state.notifications.filter((n) => n.id !== action.payload);
+      if (removed && !removed.isRead) state.unreadCount = Math.max(0, state.unreadCount - 1);
+    },
   },
 });
 
@@ -65,6 +76,7 @@ export const {
   markAllRead,
   markAsRead,
   clearNotifications,
+  removeNotification,
 } = notificationSlice.actions;
 
 export const notificationReducer = notificationSlice.reducer;

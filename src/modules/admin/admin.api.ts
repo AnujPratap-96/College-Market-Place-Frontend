@@ -1,6 +1,12 @@
 import Axios from '@/utils/Axios'
 import { isAxiosError } from 'axios'
-import type { ISystemSettings, IDisputedOrder, IReportItem, IFinancialStats } from './admin.types'
+import type {
+  ISystemSettings,
+  IDisputedOrder,
+  IReportItem,
+  IFinancialStats,
+  IAssistantEmbeddingStats,
+} from './admin.types'
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (isAxiosError(error)) {
@@ -96,6 +102,30 @@ export const fetchFinancialStats = async (): Promise<{ stats?: IFinancialStats; 
     return { stats: res.data?.data }
   } catch (error: unknown) {
     return { error: getErrorMessage(error, 'Failed to fetch financial statistics') }
+  }
+}
+
+export const fetchAssistantEmbeddingStatus = async (): Promise<{
+  stats?: IAssistantEmbeddingStats
+  error?: string
+}> => {
+  try {
+    const res = await Axios.get('/admin/assistant/embeddings-status')
+    return { stats: res.data?.data }
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to fetch assistant embedding status') }
+  }
+}
+
+export const syncAssistantEmbeddings = async (): Promise<{
+  stats?: IAssistantEmbeddingStats
+  error?: string
+}> => {
+  try {
+    const res = await Axios.post('/admin/assistant/sync-embeddings')
+    return { stats: res.data?.data }
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to rebuild assistant embeddings') }
   }
 }
 

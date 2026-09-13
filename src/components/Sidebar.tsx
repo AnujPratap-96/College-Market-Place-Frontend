@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Plus,
+  GraduationCap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { RootState } from "@/store/store";
@@ -75,13 +76,19 @@ const Sidebar = () => {
           flex flex-col
         `}
       >
-        {/* Header */}
         <div className="p-6 border-b border-border">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">CM</span>
+          <Link to="/dashboard" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+              <GraduationCap className="w-5 h-5" />
             </div>
-            <span className="font-semibold text-lg">CampusMart</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-extrabold tracking-tight text-foreground leading-none">
+                College<span className="text-orange-500">Mart</span>
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-tight">
+                Campus Marketplace
+              </span>
+            </div>
           </Link>
         </div>
 

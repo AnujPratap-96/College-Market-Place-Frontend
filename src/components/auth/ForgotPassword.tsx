@@ -59,60 +59,63 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="space-y-6 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-700 max-w-md mx-auto">
-      <div className="text-center">
-        <div className="bg-orange-100 dark:bg-orange-500/10 p-3 rounded-full inline-flex mb-3">
-          <Mail className="w-6 h-6 text-orange-500" />
+    <div className="space-y-5 w-full">
+      <div className="text-center space-y-1">
+        <div className="inline-flex p-3 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 mb-1">
+          <Mail className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Forgot Password?</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Enter your email and we'll send you a reset OTP.
+        <h2 className="text-xl font-bold text-foreground">Reset Password</h2>
+        <p className="text-xs text-muted-foreground">
+          Enter your registered college email and we will send a password reset code.
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            className="mt-1"
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Enter a valid email address",
-              },
-            })}
-          />
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-semibold text-foreground">College Email Address</Label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@college.edu"
+              className="pl-10 h-11 rounded-xl bg-background/50 border-border/70 focus-visible:ring-orange-500"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address",
+                },
+              })}
+            />
+          </div>
         </div>
 
         <Button
           type="submit"
           disabled={loading || retryCooldown > 0}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-md shadow-orange-500/20 cursor-pointer transition-all"
         >
           {loading ? (
-            "Sending OTP..."
+            "Sending Reset Code..."
           ) : retryCooldown > 0 ? (
             <>
               <RefreshCw className="w-4 h-4 animate-spin" />
               Retry in {retryCooldown}s
             </>
           ) : (
-            "Send Reset OTP"
+            "Send Password Reset Code"
           )}
         </Button>
       </form>
 
-      <div className="text-center">
+      <div className="text-center pt-2">
         <Link
           to="/auth/login"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
         >
-          <ArrowLeft className="w-3 h-3" />
-          Back to Login
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Sign In
         </Link>
       </div>
     </div>

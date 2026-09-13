@@ -114,13 +114,18 @@ const Orders = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4">
+      {/* Header with Title & Refresh */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border/60">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Orders & Transactions
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 mb-1">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Escrow Handshake Protected</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            Orders & Campus Escrow
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Track purchases, rental handshakes, and campus gig service completions.
           </p>
         </div>
@@ -131,11 +136,41 @@ const Orders = () => {
           size="sm"
           onClick={() => loadData(true)}
           disabled={loading || refreshing}
-          className="gap-2 self-start sm:self-auto h-9"
+          className="gap-2 self-start sm:self-auto h-10 rounded-xl border-border/70 hover:bg-muted/70 font-semibold text-xs"
         >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-          <span>Refresh</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          <span>Refresh Records</span>
         </Button>
+      </div>
+
+      {/* 4-Step Escrow Handshake Protocol Stepper */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20 shadow-xs">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 mb-3 flex items-center gap-1.5">
+          <Zap className="w-3.5 h-3.5" />
+          The 4-Step Campus Escrow Handshake Protocol
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 rounded-2xl bg-card/80 backdrop-blur-md border border-border/70 space-y-1">
+            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 block">STEP 1</span>
+            <p className="text-xs font-bold text-foreground">Funds in Escrow</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Payment safely held by CollegeMart platform.</p>
+          </div>
+          <div className="p-3 rounded-2xl bg-card/80 backdrop-blur-md border border-border/70 space-y-1">
+            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 block">STEP 2</span>
+            <p className="text-xs font-bold text-foreground">Campus Meetup</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Meet at Library Lawn, Canteen, or Hostel.</p>
+          </div>
+          <div className="p-3 rounded-2xl bg-card/80 backdrop-blur-md border border-border/70 space-y-1">
+            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 block">STEP 3</span>
+            <p className="text-xs font-bold text-foreground">OTP Handshake</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Buyer inspects item & shares 6-digit OTP code.</p>
+          </div>
+          <div className="p-3 rounded-2xl bg-card/80 backdrop-blur-md border border-border/70 space-y-1">
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">STEP 4</span>
+            <p className="text-xs font-bold text-foreground">Instant Wallet Payout</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Seller claims funds with 0 delay or deduction.</p>
+          </div>
+        </div>
       </div>
 
       <Tabs
@@ -147,27 +182,27 @@ const Orders = () => {
         className="space-y-6"
       >
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <TabsList className="bg-muted/80 p-1.5 h-auto rounded-xl inline-flex flex-col sm:flex-row w-full sm:w-auto gap-1.5 border border-border/50 shrink-0">
+          <TabsList className="bg-muted/80 p-1 h-auto rounded-2xl inline-flex flex-col sm:flex-row w-full sm:w-auto gap-1 border border-border/50 shrink-0">
             <TabsTrigger
               value="purchases"
-              className="gap-2.5 px-5 py-2.5 h-10 rounded-lg text-xs sm:text-sm font-semibold transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-0 sm:min-w-[230px] justify-center"
+              className="gap-2.5 px-5 py-2.5 h-10 rounded-xl text-xs sm:text-sm font-semibold transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs min-w-0 sm:min-w-[220px] justify-center"
             >
               <ShoppingBag className="w-4 h-4 shrink-0" />
               <span>My Purchases & Bookings</span>
               {purchases.length > 0 && (
-                <span className="ml-1.5 px-2 py-0.5 rounded-full text-[11px] bg-primary/10 text-primary font-bold">
+                <span className="ml-1 px-2 py-0.5 rounded-full text-[11px] bg-orange-500/15 text-orange-600 dark:text-orange-400 font-bold">
                   {purchases.length}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger
               value="sales"
-              className="gap-2.5 px-5 py-2.5 h-10 rounded-lg text-xs sm:text-sm font-semibold transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm min-w-0 sm:min-w-[230px] justify-center"
+              className="gap-2.5 px-5 py-2.5 h-10 rounded-xl text-xs sm:text-sm font-semibold transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs min-w-0 sm:min-w-[220px] justify-center"
             >
               <Package className="w-4 h-4 shrink-0" />
               <span>My Sales & Gigs</span>
               {sales.length > 0 && (
-                <span className="ml-1.5 px-2 py-0.5 rounded-full text-[11px] bg-primary/10 text-primary font-bold">
+                <span className="ml-1 px-2 py-0.5 rounded-full text-[11px] bg-orange-500/15 text-orange-600 dark:text-orange-400 font-bold">
                   {sales.length}
                 </span>
               )}
@@ -289,7 +324,7 @@ const Orders = () => {
                 <div className="rounded-xl border border-border/40 bg-background/60 p-4 space-y-1">
                   <div className="flex items-center gap-2 text-primary font-semibold text-xs">
                     <KeyRound className="w-4 h-4 text-amber-500" />
-                    <span>4-Digit Pickup OTP</span>
+                    <span>6-Digit Pickup OTP</span>
                   </div>
                   <p className="text-[12px] text-muted-foreground leading-snug">
                     Share your code with the seller only when receiving the item.

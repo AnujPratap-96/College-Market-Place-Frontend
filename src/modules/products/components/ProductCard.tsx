@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Clock, Calendar, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "@/lib/utils";
+import { MapPin, Clock, Calendar, Trash2, ShieldCheck, Tag, Sparkles, Gavel, Repeat } from "lucide-react";
 import type { IProduct } from "../product.types";
 
 interface ProductCardProps {
@@ -24,32 +23,37 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
     switch (item.type) {
       case "RENT":
         return (
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-600 text-white shadow-sm">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/90 text-white shadow-xs backdrop-blur-md border border-amber-400/40">
+            <Clock className="w-3 h-3" />
             For Rent
           </span>
         );
       case "SERVICE":
         return (
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-600 text-white shadow-sm">
-            Service
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-purple-600/90 text-white shadow-xs backdrop-blur-md border border-purple-400/40">
+            <Sparkles className="w-3 h-3" />
+            Campus Gig
           </span>
         );
       case "SUBSCRIPTION":
         return (
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-600 text-white shadow-sm">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-600/90 text-white shadow-xs backdrop-blur-md border border-emerald-400/40">
+            <Repeat className="w-3 h-3" />
             Subscription
           </span>
         );
       case "AUCTION":
         return (
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-600 text-white shadow-sm">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-orange-500/95 text-white shadow-xs backdrop-blur-md border border-orange-400/40 animate-pulse">
+            <Gavel className="w-3 h-3" />
             Live Auction
           </span>
         );
       case "SELL":
       default:
         return (
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-600 text-white shadow-sm">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-blue-600/90 text-white shadow-xs backdrop-blur-md border border-blue-400/40">
+            <Tag className="w-3 h-3" />
             For Sale
           </span>
         );
@@ -59,19 +63,19 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
   const getFormattedPrice = () => {
     const price = item.price ?? 0;
     if (item.type === "AUCTION") {
-      return `₹${price} (Starting Bid)`;
+      return `₹${price.toLocaleString()} (Start)`;
     }
     if (item.type === "RENT") {
-      return `₹${price}/day`;
+      return `₹${price.toLocaleString()}/day`;
     }
     if (item.type === "SERVICE") {
-      return `₹${price} (One-Time)`;
+      return `₹${price.toLocaleString()} (Fixed)`;
     }
     if (item.type === "SUBSCRIPTION") {
       const period = item.frequency === "WEEKLY" ? "wk" : "mo";
-      return `₹${price}/${period}`;
+      return `₹${price.toLocaleString()}/${period}`;
     }
-    return `₹${price}`;
+    return `₹${price.toLocaleString()}`;
   };
 
   return (
@@ -80,17 +84,18 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -6, transition: { duration: 0.2 } }}
-        className="group relative h-full flex flex-col bg-card rounded-2xl overflow-hidden border border-border/60 shadow-xs hover:shadow-xl transition-all duration-300"
+        className="group relative h-full flex flex-col bg-card/85 backdrop-blur-md rounded-2xl overflow-hidden border border-border/70 shadow-xs hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300"
       >
+        {/* Floating Top Badges */}
         <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5">
           {renderTypeBadge()}
           {item.status === "SOLD" && (
-            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-600 text-white shadow-sm">
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-red-600 text-white shadow-xs">
               Sold
             </span>
           )}
           {item.status === "PENDING" && (
-            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-white shadow-sm">
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500 text-white shadow-xs">
               Pending
             </span>
           )}
@@ -116,7 +121,7 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
                   e.stopPropagation();
                   onDelete(item.id);
                 }}
-                className="p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-white backdrop-blur-xs transition-colors shadow-xs text-muted-foreground"
+                className="p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-white backdrop-blur-md transition-colors shadow-xs text-muted-foreground cursor-pointer"
                 title="Delete listing"
               >
                 <Trash2 className="w-4 h-4" />
@@ -125,6 +130,7 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
           </div>
         )}
 
+        {/* Product Image Showcase */}
         <div className="relative h-48 overflow-hidden bg-muted">
           <img
             src={displayImage}
@@ -134,16 +140,17 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
             }}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
+        {/* Card Body */}
         <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+              <h3 className="font-bold text-base text-foreground line-clamp-1 group-hover:text-orange-500 transition-colors">
                 {item.title}
               </h3>
-              <div className="font-bold text-primary shrink-0 text-sm whitespace-nowrap">
+              <div className="font-extrabold text-orange-600 dark:text-orange-400 shrink-0 text-sm whitespace-nowrap">
                 {getFormattedPrice()}
               </div>
             </div>
@@ -155,19 +162,19 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
             {(item.deliverySlots || item.serviceDuration || item.securityDeposit !== undefined) && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {item.serviceDuration && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20">
                     <Clock className="w-3 h-3 shrink-0" />
                     <span className="truncate max-w-[140px]">{item.serviceDuration}</span>
                   </span>
                 )}
                 {item.deliverySlots && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                     <Calendar className="w-3 h-3 shrink-0" />
                     <span className="truncate max-w-[140px]">{item.deliverySlots}</span>
                   </span>
                 )}
                 {item.type === "RENT" && typeof item.securityDeposit === "number" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
                     Deposit: ₹{item.securityDeposit}
                   </span>
                 )}
@@ -175,19 +182,15 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
             )}
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-3 border-t border-border/50">
-            {college && (
-              <div className="flex items-center gap-1 min-w-0">
-                <MapPin className="w-3 h-3 shrink-0" />
-                <span className="truncate">{college}</span>
-              </div>
-            )}
-            {item.createdAt && (
-              <div className="flex items-center gap-1 ml-auto shrink-0">
-                <Clock className="w-3 h-3" />
-                <span>{formatDistanceToNow(new Date(item.createdAt))}</span>
-              </div>
-            )}
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/60">
+            <div className="flex items-center gap-1 min-w-0">
+              <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+              <span className="truncate font-medium">{college || "Campus Circle"}</span>
+            </div>
+            <div className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Escrow</span>
+            </div>
           </div>
         </div>
       </motion.div>

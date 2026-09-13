@@ -83,3 +83,14 @@ export interface IFinancialStats {
   activeSubscriptionsCount: number
   activeDisputesCount: number
 }
+
+export interface IAssistantEmbeddingStats {
+  totalIndexed: number
+  availableCount: number
+  rentedCount: number
+  lastSyncedAt: string | null
+  dbIndexedCount?: number
+  dbActiveIndexedCount?: number
+  dbLastUpdatedAt?: string | null
+  dbStatusError?: string
+}

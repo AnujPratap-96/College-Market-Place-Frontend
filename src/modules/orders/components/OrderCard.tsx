@@ -24,7 +24,6 @@ import {
   confirmService,
   cancelOrder,
 } from "../order.api";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import OtpHandshakeModal from "./OtpHandshakeModal";
 import DisputeModal from "./DisputeModal";
@@ -227,18 +226,15 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
     const targetUserId =
       order.buyerId === currentUserId ? order.sellerId : order.buyerId;
     if (targetUserId) {
-      navigate(
-        '/dashboard/messages?userId=' +
-          targetUserId +
-          '&productId=' +
-          order.productId
-      );
+      navigate('/dashboard/messages', {
+        state: { userId: targetUserId, productId: order.productId },
+      });
     }
   };
 
   return (
     <>
-      <Card className="overflow-hidden border border-border/70 hover:shadow-md transition-shadow">
+      <div className="overflow-hidden bg-card/85 backdrop-blur-md rounded-2xl border border-border/70 hover:border-orange-500/30 hover:shadow-lg transition-all">
         <div className="p-4 sm:p-5 flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
             <div className="flex items-center gap-2">
@@ -315,8 +311,30 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
             </div>
           </div>
 
+          {/* Campus Escrow Handshake Station Callout */}
+          {order.status === "ESCROW_HELD" && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-start gap-2.5">
+                <div className="p-2 rounded-xl bg-orange-500/15 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5">
+                  <KeyRound className="w-4 h-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <span>Campus Escrow Handshake Ready</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {role === "buyer"
+                      ? "Meet peer on campus. Inspect item in person and share your 6-digit OTP to release escrow payout."
+                      : "Hand over item at campus spot. Ask buyer for their 6-digit OTP to claim instant funds in your wallet."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {order.status === "DISPUTED" && (
-            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300">
+            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
               <div>
                 <span className="font-semibold block">Under Dispute Review</span>
@@ -334,10 +352,10 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                 variant="outline"
                 size="sm"
                 onClick={handleMessage}
-                className="text-xs h-8 gap-1.5"
+                className="text-xs h-9 px-3 gap-1.5 rounded-xl border-border/70"
               >
-                <MessageSquare className="w-3.5 h-3.5" />
-                Message
+                <MessageSquare className="w-3.5 h-3.5 text-orange-500" />
+                Message Peer
               </Button>
 
               {canCancel && (
@@ -480,15 +498,14 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                         <Button
                           type="button"
                           size="sm"
-                          variant="secondary"
                           onClick={() => {
                             setOtpMode("SHOW_BUYER_OTP");
                             setOtpType("PICKUP");
                             setOtpModalOpen(true);
                           }}
-                          className="text-xs h-8 gap-1.5"
+                          className="text-xs h-9 px-4 rounded-xl gap-1.5 font-bold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20 cursor-pointer"
                         >
-                          <KeyRound className="w-3.5 h-3.5 text-primary" />
+                          <KeyRound className="w-3.5 h-3.5" />
                           View Delivery OTP
                         </Button>
                       ) : (
@@ -500,10 +517,10 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                             setOtpType("PICKUP");
                             setOtpModalOpen(true);
                           }}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 gap-1.5 font-medium"
+                          className="text-xs h-9 px-4 rounded-xl gap-1.5 font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20 cursor-pointer"
                         >
                           <KeyRound className="w-3.5 h-3.5" />
-                          Verify Handover
+                          Verify Handover (Claim Escrow)
                         </Button>
                       )}
                     </>
@@ -513,7 +530,7 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
             </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {otpModalOpen && (
         <OtpHandshakeModal

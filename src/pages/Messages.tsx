@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store/store';
 import {
@@ -23,17 +23,22 @@ import { ConversationList, ChatWindow } from '@/modules/messages/components';
 import type { IMessage } from '@/modules/messages/message.types';
 
 export const Messages = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const urlUserId = searchParams.get('userId');
   const urlProductId = searchParams.get('productId');
+  const navigationState = location.state as { userId?: string; productId?: string } | null;
+  const requestedUserId = urlUserId || navigationState?.userId || null;
+  const requestedProductId = urlProductId || navigationState?.productId || null;
 
   const { conversations, activeMessages, typingUsers } = useSelector(
     (state: RootState) => state.messages
   );
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(urlUserId || null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(requestedUserId);
   const [productContext, setProductContext] = useState<{
     id: string;
     title: string;
@@ -55,19 +60,19 @@ export const Messages = () => {
   selectedUserIdRef.current = selectedUserId;
 
   useEffect(() => {
-    if (urlUserId && urlUserId !== selectedUserId) {
-      setSelectedUserId(urlUserId);
+    if (requestedUserId && requestedUserId !== selectedUserId) {
+      setSelectedUserId(requestedUserId);
     }
-  }, [urlUserId, selectedUserId]);
+  }, [requestedUserId, selectedUserId]);
 
   useEffect(() => {
-    if (!urlProductId) {
+    if (!requestedProductId) {
       setProductContext(null);
       return;
     }
 
     let isMounted = true;
-    fetchProductById(urlProductId).then((res) => {
+    fetchProductById(requestedProductId).then((res) => {
       if (!isMounted || !res.product) return;
       setProductContext({
         id: res.product.id,
@@ -78,7 +83,7 @@ export const Messages = () => {
       });
 
       const rawOwner = res.product.owner || res.product.seller;
-      if (rawOwner && rawOwner.id === urlUserId) {
+      if (rawOwner && rawOwner.id === requestedUserId) {
         const profileImage =
           ('profileImage' in rawOwner ? rawOwner.profileImage : undefined) ||
           ('image' in rawOwner ? rawOwner.image : undefined);
@@ -95,7 +100,23 @@ export const Messages = () => {
     return () => {
       isMounted = false;
     };
-  }, [urlProductId, urlUserId]);
+  }, [requestedProductId, requestedUserId]);
+
+  useEffect(() => {
+    if (requestedProductId) return;
+    const product = activeMessages.find((message) => message.product)?.product;
+    if (product) {
+      setProductContext({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        type: product.type,
+      });
+    } else {
+      setProductContext(null);
+    }
+  }, [activeMessages, requestedProductId]);
 
   const loadConversations = useCallback(async () => {
     setConversationsLoading(true);
@@ -164,6 +185,7 @@ export const Messages = () => {
     }
 
     dispatch(setActiveUserId(selectedUserId));
+    if (!requestedProductId) setProductContext(null);
     let isMounted = true;
     setMessagesLoading(true);
 
@@ -194,16 +216,16 @@ export const Messages = () => {
     setSelectedUserId(userId);
     const currentProductId = searchParams.get('productId');
     const currentUserId = searchParams.get('userId');
-    if (currentProductId && currentUserId === userId) {
-      setSearchParams({ userId, productId: currentProductId });
-    } else {
-      setSearchParams({ userId });
-    }
+    navigate('/dashboard/messages', {
+      state: currentProductId && currentUserId === userId
+        ? { userId, productId: currentProductId }
+        : { userId },
+    });
   };
 
   const handleBack = () => {
     setSelectedUserId(null);
-    setSearchParams({});
+    navigate('/dashboard/messages', { replace: true, state: null });
   };
 
   const handleSendMessage = (content: string) => {

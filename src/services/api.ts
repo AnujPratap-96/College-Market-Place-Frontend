@@ -44,6 +44,13 @@ export interface IUserProfile {
   posts: IPost[];
   requests: IUserRequest[];
   purchasedItems: IPost[];
+  stats?: {
+    trustScore: number | null;
+    totalReviews: number;
+    successfulTrades: number;
+    isVerified: boolean;
+    responseRate: number | null;
+  };
 }
 
 export interface IUserRequest {
@@ -211,7 +218,8 @@ export const fetchUserProfile = async (): Promise<{ success?: IUserProfile; erro
           image: data.profileImage || data.image || "",
           posts: (raw.posts || data.posts || []).map(normalizeProduct),
           requests: raw.requests || data.requests || [],
-          purchasedItems: (raw.purchasedItems || data.purchasedItems || []).map(normalizeProduct),
+            purchasedItems: (raw.purchasedItems || data.purchasedItems || []).map(normalizeProduct),
+            stats: data.stats || raw.stats,
         },
       };
     }

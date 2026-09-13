@@ -181,6 +181,7 @@ export const NotificationBell = () => {
     };
 
     const handleReceiveMessage = (payload: {
+      id?: string;
       senderId?: string;
       content?: string;
       sender?: { name?: string };
@@ -188,10 +189,12 @@ export const NotificationBell = () => {
       const senderName = payload?.sender?.name;
       dispatch(
         addNotification({
+          eventId: payload?.id,
           type: 'CHAT',
           title: senderName ? `Message from ${senderName}` : 'New Message',
           message: payload?.content || 'You have received a new message.',
-          link: `/dashboard/messages?userId=${payload?.senderId || ''}`,
+          link: '/dashboard/messages',
+          linkState: { userId: payload?.senderId },
         })
       );
     };

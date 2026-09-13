@@ -6,7 +6,7 @@ import Axios from "@/utils/Axios";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import useFetchUser from "@/hooks/useFetchUser";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { KeyRound, Sparkles, ArrowLeft } from "lucide-react";
+import { KeyRound, Sparkles, ArrowLeft, Mail, Lock } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 
 type FormValues = {
@@ -164,125 +164,138 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="space-y-5 bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-700 max-w-md mx-auto">
-      <div className="flex rounded-lg bg-zinc-100 dark:bg-zinc-800 p-1">
+    <div className="space-y-5 w-full">
+      <div className="flex rounded-xl bg-muted/70 p-1 border border-border/50">
         <button
           type="button"
-          onClick={() => {
-            setLoginMode("PASSWORD");
-          }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${
+          onClick={() => setLoginMode("PASSWORD")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
             loginMode === "PASSWORD"
-              ? "bg-white dark:bg-zinc-900 text-foreground shadow-sm"
+              ? "bg-card text-foreground shadow-xs"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <KeyRound size={16} />
+          <KeyRound size={15} />
           Password
         </button>
         <button
           type="button"
-          onClick={() => {
-            setLoginMode("OTP");
-          }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${
+          onClick={() => setLoginMode("OTP")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
             loginMode === "OTP"
-              ? "bg-white dark:bg-zinc-900 text-orange-500 dark:text-orange-400 shadow-sm"
+              ? "bg-card text-orange-600 dark:text-orange-400 shadow-xs"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Sparkles size={16} />
-          Login with OTP
+          <Sparkles size={15} />
+          One-Time Code (OTP)
         </button>
       </div>
 
       {loginMode === "PASSWORD" ? (
         <form className="space-y-4" onSubmit={handleSubmit(onPasswordSubmit, onInvalid)}>
-          <div>
-            <Input
-              type="email"
-              placeholder="Email"
-              className="bg-white dark:bg-zinc-800"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Invalid email address",
-                },
-              })}
-            />
-          </div>
-
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              className="bg-white dark:bg-zinc-800"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Password must be at least 6 characters",
-                },
-              })}
-            />
-            <div
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer text-muted-foreground"
-            >
-              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">College Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="you@college.edu"
+                className="pl-10 h-11 rounded-xl bg-background/50 border-border/70 focus-visible:ring-orange-500"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Invalid email address",
+                  },
+                })}
+              />
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Link
-              to="/auth/forgot-password"
-              className="text-sm text-orange-500 hover:text-orange-600 hover:underline transition-colors"
-            >
-              Forgot password?
-            </Link>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-foreground">Password</label>
+              <Link
+                to="/auth/forgot-password"
+                className="text-xs font-medium text-orange-600 hover:text-orange-500 hover:underline transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className="pl-10 pr-10 h-11 rounded-xl bg-background/50 border-border/70 focus-visible:ring-orange-500"
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                {showPassword ? <AiOutlineEyeInvisible size={18} /> : <AiOutlineEye size={18} />}
+              </button>
+            </div>
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full bg-orange-500 hover:bg-orange-600 text-white cursor-pointer">
-            {loading ? "Logging in..." : "Login with Password"}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-semibold shadow-md shadow-orange-500/20 cursor-pointer transition-all"
+          >
+            {loading ? "Signing in..." : "Sign In to CollegeMart"}
           </Button>
         </form>
       ) : (
         <div className="space-y-4">
           {!otpSent ? (
             <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Enter your registered college email and we will send you a one-time login code.
+              <div className="text-center p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">
+                  Enter your registered college email. We will send an instant 6-digit login code.
                 </p>
               </div>
 
-              <div>
-                <Input
-                  type="email"
-                  placeholder="name@college.edu"
-                  value={otpEmail}
-                  onChange={(e) => {
-                    setOtpEmail(e.target.value);
-                  }}
-                  className="bg-white dark:bg-zinc-800"
-                />
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Registered Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="name@college.edu"
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
+                    className="pl-10 h-11 rounded-xl bg-background/50 border-border/70 focus-visible:ring-orange-500"
+                  />
+                </div>
               </div>
 
               <Button
                 type="button"
                 onClick={handleSendLoginOtp}
                 disabled={loading || !otpEmail}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold shadow-md shadow-orange-500/20 cursor-pointer"
               >
-                {loading ? "Sending Code..." : "Send Login OTP"}
+                {loading ? "Sending Code..." : "Send Login Code (OTP)"}
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">
-                  Code sent to <span className="text-orange-500">{otpEmail}</span>
+              <div className="text-center p-3 rounded-xl bg-muted/60 border border-border/60">
+                <p className="text-xs text-muted-foreground">
+                  Verification code sent to
+                </p>
+                <p className="text-sm font-bold text-foreground truncate mt-0.5">
+                  {otpEmail}
                 </p>
                 <button
                   type="button"
@@ -290,7 +303,7 @@ const LoginForm = () => {
                     setOtpSent(false);
                     setOtpDigits(Array(OTP_LENGTH).fill(""));
                   }}
-                  className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mt-1 cursor-pointer"
+                  className="text-xs text-orange-600 hover:text-orange-500 inline-flex items-center gap-1 mt-1 font-medium cursor-pointer"
                 >
                   <ArrowLeft size={12} />
                   Change email
@@ -311,7 +324,7 @@ const LoginForm = () => {
                     ref={(el) => {
                       otpInputRefs.current[index] = el;
                     }}
-                    className="h-12 w-12 text-center text-lg font-semibold"
+                    className="h-12 w-12 text-center text-lg font-bold rounded-xl border-border/80 focus-visible:ring-orange-500"
                   />
                 ))}
               </div>
@@ -320,18 +333,18 @@ const LoginForm = () => {
                 type="button"
                 onClick={handleVerifyLoginOtp}
                 disabled={loading || otpDigits.some((d) => !/^\d$/.test(d))}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold shadow-md shadow-orange-500/20 cursor-pointer"
               >
-                {loading ? "Verifying..." : "Verify & Login"}
+                {loading ? "Verifying..." : "Verify & Enter Dashboard"}
               </Button>
 
-              <div className="flex items-center justify-between text-sm pt-2">
-                <span className="text-muted-foreground">Didn't receive the code?</span>
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-muted-foreground">Didn't receive code?</span>
                 <button
                   type="button"
                   onClick={handleResendLoginOtp}
                   disabled={countdown > 0 || resending}
-                  className="text-orange-500 hover:text-orange-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="text-orange-600 hover:text-orange-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {resending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
                 </button>

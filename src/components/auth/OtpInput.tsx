@@ -24,6 +24,10 @@ export default function OtpInput() {
   }, [navigate]);
 
   useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
       setCountdown((prev) => prev - 1);
@@ -121,11 +125,15 @@ export default function OtpInput() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg text-center">
-      <h2 className="text-2xl font-bold mb-2 text-foreground">Enter your OTP</h2>
-      <p className="text-sm text-muted-foreground mb-6">We sent a 6-digit code to your email</p>
+    <div className="space-y-6 w-full text-center">
+      <div className="space-y-1.5">
+        <h2 className="text-xl font-bold text-foreground">Verify Your Email</h2>
+        <p className="text-xs text-muted-foreground">
+          Enter the 6-digit code sent to your college inbox
+        </p>
+      </div>
 
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex justify-center gap-2">
         {otp.map((digit, index) => (
           <Input
             key={index}
@@ -139,29 +147,29 @@ export default function OtpInput() {
             ref={(el) => {
               inputRefs.current[index] = el;
             }}
-            className="h-12 w-12 text-center text-lg font-semibold"
+            className="h-12 w-12 text-center text-xl font-bold rounded-xl border-border/80 focus-visible:ring-orange-500 bg-background/50"
           />
         ))}
       </div>
 
       <Button
         size="lg"
-        className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+        className="w-full h-11 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-500/20 cursor-pointer transition-all"
         onClick={handleSubmit}
         disabled={!isAllDigitsFilled || loading}
       >
-        {loading ? "Verifying..." : "Submit OTP"}
+        {loading ? "Verifying Code..." : "Verify & Continue"}
       </Button>
 
-      <div className="flex items-center justify-between text-sm pt-4">
+      <div className="flex items-center justify-between text-xs pt-2">
         <span className="text-muted-foreground">Didn't receive the code?</span>
         <button
           type="button"
           onClick={handleResend}
           disabled={countdown > 0 || resending}
-          className="text-orange-500 hover:text-orange-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="text-orange-600 hover:text-orange-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {resending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+          {resending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
         </button>
       </div>
     </div>

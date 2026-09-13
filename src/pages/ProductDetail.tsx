@@ -8,7 +8,6 @@ import {
   IndianRupee,
   MapPin,
   MessageSquare,
-  User,
   Clock,
   Calendar,
   Repeat,
@@ -18,6 +17,8 @@ import {
   Loader2,
   Gavel,
   Trophy,
+  KeyRound,
+  CheckCircle2,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
@@ -34,12 +35,6 @@ import { PlaceBidModal } from "@/modules/auctions/components/PlaceBidModal";
 import type { IAuction, IBid } from "@/modules/auctions/auction.types";
 import { getSocket } from "@/modules/messages/socket.client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const ProductDetail = () => {
@@ -189,7 +184,7 @@ const ProductDetail = () => {
     if (!product) return;
     const targetUserId = product.seller?.id || product.owner?.id;
     if (targetUserId) {
-      navigate('/dashboard/messages?userId=' + targetUserId + '&productId=' + product.id);
+      navigate('/dashboard/messages', { state: { userId: targetUserId, productId: product.id } });
     }
   };
 
@@ -489,120 +484,171 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground whitespace-pre-wrap">
-                {product.description}
-              </p>
-            </CardContent>
-          </Card>
+          {/* Description Card */}
+          <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/70 p-5 shadow-xs space-y-2.5">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Item Details & Overview
+            </h3>
+            <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+              {product.description}
+            </p>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Seller
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={sellerImage} />
-                  <AvatarFallback>{sellerName.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">{sellerName}</p>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {sellerCollege}
-                  </p>
+          {/* Seller Card */}
+          <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/70 p-5 shadow-xs flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <Avatar className="w-12 h-12 border-2 border-orange-500/30">
+                <AvatarImage src={sellerImage} />
+                <AvatarFallback className="bg-orange-500/10 text-orange-600 font-bold">
+                  {sellerName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-bold text-sm text-foreground truncate">{sellerName}</p>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                    Verified Peer
+                  </span>
                 </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 truncate mt-0.5">
+                  <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                  {sellerCollege}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {!isOwner && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMessageSeller}
+                className="gap-1.5 rounded-xl border-border/80 hover:bg-muted/70 text-xs font-semibold shrink-0"
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-orange-500" />
+                <span>Chat</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Campus Escrow Handshake Guarantee Box */}
+          <div className="bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent rounded-2xl border border-emerald-500/20 p-4 space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Campus Escrow Handshake Guarantee</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              When you purchase or win this item, your payment is held safely in escrow. Arrange a campus meetup (e.g. Central Library Lawn, Hostel Lobby) and test the item in person. Funds are only transferred once you share your 6-digit OTP.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {[
+                { icon: ShieldCheck, title: "1. Escrow Locked", copy: "Payment is held before meetup." },
+                { icon: MapPin, title: "2. Inspect on Campus", copy: "Meet at a known safe spot." },
+                { icon: KeyRound, title: "3. Share OTP", copy: "Seller gets paid after your code." },
+              ].map((step) => {
+                const Icon = step.icon;
+                return (
+                  <div key={step.title} className="rounded-xl border border-border/60 bg-card/70 p-3">
+                    <Icon className="w-4 h-4 text-orange-500 mb-1.5" />
+                    <p className="text-[11px] font-bold text-foreground">{step.title}</p>
+                    <p className="text-[10px] text-muted-foreground leading-snug">{step.copy}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/70 p-4 shadow-xs space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Suggested Safe Meetup Zones
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {["Central Library Lawn", "Student Cafeteria", "Hostel Lobby"].map((zone) => (
+                <div key={zone} className="flex items-center gap-2 rounded-xl bg-muted/45 border border-border/50 px-3 py-2 text-xs font-semibold text-foreground">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{zone}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {product.type === "AUCTION" && auction && (
-            <Card>
-              <CardContent className="pt-6">
-                <BidFeed bids={auction.bids || []} startingBid={auction.startingBid} />
-              </CardContent>
-            </Card>
+            <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/70 p-5 shadow-xs">
+              <BidFeed bids={auction.bids || []} startingBid={auction.startingBid} />
+            </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          {/* Action CTAs */}
+          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 pt-2">
             {isOwner ? (
-              <div className="flex flex-col gap-1">
-                <Button disabled size="lg" className="font-medium">
+              <div className="flex flex-col gap-1 w-full">
+                <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
                   {product.type === "AUCTION"
                     ? auction?.status === "PENDING"
-                      ? "Awaiting Admin Approval"
-                      : "This is your auction listing"
-                    : "This is your listing"}
+                      ? "Awaiting Admin Review"
+                      : "This is your active auction"
+                    : "This is your active listing"}
                 </Button>
                 {product.type === "AUCTION" && auction?.status === "PENDING" && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
                     Your auction is awaiting review. It will go live automatically upon approval.
                   </p>
                 )}
               </div>
             ) : product.status === "SOLD" ? (
-              <Button disabled size="lg" className="font-medium">
+              <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
                 Listing Sold Out
               </Button>
             ) : product.type === "AUCTION" ? (
               auction?.status === "PENDING" ? (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-sm font-medium">
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-xs font-medium w-full">
                   <Clock className="w-4 h-4 shrink-0" />
-                  <span>⏳ Under Campus Review — Bidding will open once verified by administrators.</span>
+                  <span>⏳ Under Review — Bidding opens once approved by campus moderators.</span>
                 </div>
               ) : auction?.status === "ENDED" ? (
                 (auction.winnerId === user.id || auction.currentBidderId === user.id) ? (
-                  <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-2">
+                  <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md">
                     <Link to="/dashboard/orders">
                       <Trophy className="w-4 h-4" />
-                      You Won! View Pickup OTP
+                      You Won! View Pickup Handshake OTP
                     </Link>
                   </Button>
                 ) : (
-                  <Button disabled size="lg" className="font-medium">
+                  <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
                     Auction Ended
                   </Button>
                 )
               ) : (
                 <Button
                   size="lg"
-                  className="bg-orange-600 hover:bg-orange-700 text-white font-medium gap-2"
+                  className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer"
                   onClick={() => setIsBidModalOpen(true)}
                 >
                   <Gavel className="w-4 h-4" />
-                  Place Bid
+                  Place Live Bid
                 </Button>
               )
             ) : product.type === "SERVICE" ? (
               <Button
                 size="lg"
-                className="bg-purple-600 hover:bg-purple-700 text-white font-medium gap-2"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-purple-500/20 cursor-pointer"
                 onClick={() => setIsServiceModalOpen(true)}
               >
                 <Sparkles className="w-4 h-4" />
-                Book Service Now
+                Book Campus Gig Now
               </Button>
             ) : product.type === "SUBSCRIPTION" ? (
               <Button
                 size="lg"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium gap-2"
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-emerald-500/20 cursor-pointer"
                 onClick={() => setIsSubscribeModalOpen(true)}
               >
                 <Repeat className="w-4 h-4" />
-                Subscribe to Plan
+                Subscribe with Vacation Pause
               </Button>
             ) : product.type === "RENT" ? (
               <Button
                 size="lg"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-medium gap-2"
+                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-amber-500/20 cursor-pointer"
                 disabled={actionLoading}
                 onClick={() => handleDirectCheckout("RENT")}
               >
@@ -611,12 +657,12 @@ const ProductDetail = () => {
                 ) : (
                   <Clock className="w-4 h-4" />
                 )}
-                {actionLoading ? "Processing..." : "Rent This Item"}
+                {actionLoading ? "Processing Deposit..." : "Rent This Item (Escrow Protected)"}
               </Button>
             ) : (
               <Button
                 size="lg"
-                className="gap-2 font-medium"
+                className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer"
                 disabled={actionLoading}
                 onClick={() => handleDirectCheckout("SELL")}
               >
@@ -625,27 +671,11 @@ const ProductDetail = () => {
                 ) : (
                   <ShoppingBag className="w-4 h-4" />
                 )}
-                {actionLoading ? "Processing..." : "Buy Now"}
+                {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
               </Button>
             )}
 
-            {!isOwner && (
-              <Button
-                variant="outline"
-                size="lg"
-                className="gap-2"
-                onClick={handleMessageSeller}
-              >
-                <MessageSquare className="w-4 h-4" />
-                {product.type === "SERVICE" || product.type === "SUBSCRIPTION"
-                  ? "Message Provider"
-                  : product.type === "AUCTION"
-                  ? "Message Auctioneer"
-                  : "Message Seller"}
-              </Button>
-            )}
-
-            <Button variant="outline" size="lg" asChild>
+            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto rounded-xl h-12 shrink-0">
               <Link to="/dashboard">Back</Link>
             </Button>
           </div>

@@ -117,21 +117,23 @@ const ResetOtp = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg text-center space-y-4">
-      <h2 className="text-2xl font-bold text-foreground">Enter Reset OTP</h2>
-      <p className="text-sm text-muted-foreground">
-        We sent a 6-digit code to{" "}
-        <span className="font-medium text-orange-500">{userEmail || "your email"}</span>
-      </p>
-      <div>
-        <button
-          type="button"
-          onClick={() => navigate("/auth/forgot-password")}
-          className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
-        >
-          <ArrowLeft size={12} />
-          Change email address
-        </button>
+    <div className="space-y-6 w-full text-center">
+      <div className="space-y-1.5">
+        <h2 className="text-xl font-bold text-foreground">Enter Reset Code</h2>
+        <p className="text-xs text-muted-foreground">
+          We sent a 6-digit code to{" "}
+          <span className="font-semibold text-orange-600 dark:text-orange-400">{userEmail || "your email"}</span>
+        </p>
+        <div>
+          <button
+            type="button"
+            onClick={() => navigate("/auth/forgot-password")}
+            className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mt-1 cursor-pointer font-medium"
+          >
+            <ArrowLeft size={12} />
+            Change email address
+          </button>
+        </div>
       </div>
 
       <div className="flex justify-center gap-2">
@@ -148,29 +150,29 @@ const ResetOtp = () => {
             ref={(el) => {
               inputRefs.current[index] = el;
             }}
-            className="h-12 w-12 text-center text-lg font-semibold"
+            className="h-12 w-12 text-center text-xl font-bold rounded-xl border-border/80 focus-visible:ring-orange-500 bg-background/50"
           />
         ))}
       </div>
 
       <Button
         size="lg"
-        className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+        className="w-full h-11 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-500/20 cursor-pointer transition-all"
         onClick={handleSubmit}
         disabled={!isAllFilled || loading}
       >
-        {loading ? "Verifying..." : "Verify OTP"}
+        {loading ? "Verifying Code..." : "Verify Reset Code"}
       </Button>
 
-      <div className="flex items-center justify-between text-sm pt-2">
+      <div className="flex items-center justify-between text-xs pt-2">
         <span className="text-muted-foreground">Didn't receive the code?</span>
         <button
           type="button"
           onClick={handleResend}
           disabled={countdown > 0 || resending}
-          className="text-orange-500 hover:text-orange-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="text-orange-600 hover:text-orange-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          {resending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
+          {resending ? "Sending..." : countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
         </button>
       </div>
     </div>

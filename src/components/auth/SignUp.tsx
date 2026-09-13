@@ -1,186 +1,201 @@
-import { useForm } from "react-hook-form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import Axios from "@/utils/Axios"
-import { Link, useNavigate } from "react-router-dom"
+import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import Axios from "@/utils/Axios";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { motion } from "framer-motion"
-import { useState } from "react"
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"
-import { toast } from "@/components/ui/toast"
+} from "@/components/ui/select";
+import { useState } from "react";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { User, Lock, GraduationCap, BookOpen, Phone, Sparkles } from "lucide-react";
+import { toast } from "@/components/ui/toast";
 
 type SignupFormData = {
-  name: string
-  password: string
-  college: string
-  branch: string
-  year: string
-  phone: string
-}
+  name: string;
+  password: string;
+  college: string;
+  branch: string;
+  year: string;
+  phone: string;
+};
 
 const SignupForm = () => {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
-  } = useForm<SignupFormData>()
+  } = useForm<SignupFormData>();
 
   const onInvalid = (formErrors: any) => {
-    const firstError = Object.values(formErrors)[0] as any
+    const firstError = Object.values(formErrors)[0] as any;
     if (firstError?.message) {
-      toast.error(firstError.message)
+      toast.error(firstError.message);
     } else {
-      toast.error("Please fill in all required fields.")
+      toast.error("Please fill in all required fields.");
     }
-  }
+  };
 
   const onSubmit = async (data: SignupFormData) => {
-    const token = localStorage.getItem("signupToken")
+    const token = localStorage.getItem("signupToken");
     if (!token) {
-      navigate("/auth/signup")
-      return
+      navigate("/auth/signup");
+      return;
     }
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await Axios.post(
         "/user/complete-signup",
         { ...data },
         { headers: { Authorization: `Bearer ${token}` } }
-      )
+      );
       if (response.status === 200 || response.status === 201 || response.data?.success) {
-        localStorage.removeItem("signupToken")
-        const authToken = response.data?.data?.token || response.data?.token
+        localStorage.removeItem("signupToken");
+        const authToken = response.data?.data?.token || response.data?.token;
         if (authToken) {
-          localStorage.setItem("authToken", authToken)
+          localStorage.setItem("authToken", authToken);
         }
-        toast.success("Account created successfully! Welcome to College Marketplace.")
-        navigate("/auth/thank-you")
+        toast.success("Account created successfully! Welcome to CollegeMart.");
+        navigate("/auth/thank-you");
       }
     } catch (error: any) {
       const errorMsg =
         error?.response?.data?.error ||
         error?.response?.data?.message ||
-        "Signup failed. Please try again."
+        "Signup failed. Please try again.";
 
       if (
         errorMsg.toLowerCase().includes("already registered") ||
         errorMsg.toLowerCase().includes("already associated") ||
         errorMsg.toLowerCase().includes("already exists")
       ) {
-        localStorage.removeItem("signupToken")
+        toast.error("Account already exists with this email. Please log in.");
+        setTimeout(() => navigate("/auth/login"), 2000);
+      } else {
+        toast.error(errorMsg);
       }
-
-      toast.error(errorMsg)
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <section className="flex items-center justify-center px-4 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-xl p-8"
-      >
-        <div className="text-center mb-10">
-          <h2 className="text-4xl font-bold leading-tight">
-            Create your <span className="text-orange-400">Account</span>
-          </h2>
-          <p className="text-base text-muted-foreground mt-2">
-            Sign up to start buying and selling on your campus.
-          </p>
+    <div className="space-y-5 w-full">
+      <div className="text-center space-y-1">
+        <div className="inline-flex p-2.5 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 mb-1">
+          <Sparkles className="w-5 h-5" />
         </div>
+        <h2 className="text-xl font-bold text-foreground">
+          Complete Your Student Profile
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Enter your college details to set up your verified marketplace account.
+        </p>
+      </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit, onInvalid)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"
-        >
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
-            <Input
-              id="name"
-              className="text-base"
-              type="text"
-              placeholder="John Doe"
-              {...register("name", { required: "Name is required" })}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1 relative">
-            <Label htmlFor="password" className="text-base font-medium">Password</Label>
-            <Input
-              id="password"
-              className="text-base pr-10"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              {...register("password", {
-                required: "Password is required",
-                minLength: { value: 6, message: "Password must be at least 6 characters" },
-              })}
-            />
-            <div
-              className="absolute right-3 top-[38px] cursor-pointer text-muted-foreground"
-              onClick={() => setShowPassword((prev) => !prev)}
-            >
-              {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1">
+            <Label htmlFor="name" className="text-xs font-semibold text-foreground">Full Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="name"
+                className="pl-9 h-10 rounded-xl bg-background/50 border-border/70 text-xs sm:text-sm focus-visible:ring-orange-500"
+                type="text"
+                placeholder="Anuj Pratap"
+                {...register("name", { required: "Name is required" })}
+              />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="college" className="text-base font-medium">College</Label>
+          <div className="space-y-1">
+            <Label htmlFor="password" className="text-xs font-semibold text-foreground">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="password"
+                className="pl-9 pr-9 h-10 rounded-xl bg-background/50 border-border/70 text-xs sm:text-sm focus-visible:ring-orange-500"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: { value: 6, message: "At least 6 characters" },
+                })}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <AiOutlineEyeInvisible size={16} /> : <AiOutlineEye size={16} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="college" className="text-xs font-semibold text-foreground">College / University Name</Label>
+          <div className="relative">
+            <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="college"
-              className="text-base"
+              className="pl-9 h-10 rounded-xl bg-background/50 border-border/70 text-xs sm:text-sm focus-visible:ring-orange-500"
               type="text"
-              placeholder="ABC University"
+              placeholder="e.g. IIT Bombay, BITS Pilani, NIT Trichy"
               {...register("college", { required: "College is required" })}
             />
           </div>
+        </div>
 
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="branch" className="text-base font-medium">Branch</Label>
-            <Input
-              id="branch"
-              className="text-base"
-              type="text"
-              placeholder="Computer Science"
-              {...register("branch", { required: "Branch is required" })}
-            />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1">
+            <Label htmlFor="branch" className="text-xs font-semibold text-foreground">Branch / Major</Label>
+            <div className="relative">
+              <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="branch"
+                className="pl-9 h-10 rounded-xl bg-background/50 border-border/70 text-xs sm:text-sm focus-visible:ring-orange-500"
+                type="text"
+                placeholder="Computer Science"
+                {...register("branch", { required: "Branch is required" })}
+              />
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="year" className="text-base font-medium">Year</Label>
+          <div className="space-y-1">
+            <Label htmlFor="year" className="text-xs font-semibold text-foreground">Batch / Year</Label>
             <Select onValueChange={(val) => setValue("year", val, { shouldValidate: true })}>
-              <SelectTrigger className="text-base">
+              <SelectTrigger className="h-10 rounded-xl bg-background/50 border-border/70 text-xs sm:text-sm focus:ring-orange-500">
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1st Year">1st Year</SelectItem>
-                <SelectItem value="2nd Year">2nd Year</SelectItem>
-                <SelectItem value="3rd Year">3rd Year</SelectItem>
-                <SelectItem value="4th Year">4th Year</SelectItem>
+                <SelectItem value="1st Year">1st Year (Freshman)</SelectItem>
+                <SelectItem value="2nd Year">2nd Year (Sophomore)</SelectItem>
+                <SelectItem value="3rd Year">3rd Year (Junior)</SelectItem>
+                <SelectItem value="4th Year">4th Year (Senior)</SelectItem>
+                <SelectItem value="Postgraduate">Postgraduate / PhD</SelectItem>
               </SelectContent>
             </Select>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="phone" className="text-base font-medium">Phone</Label>
+        <div className="space-y-1">
+          <Label htmlFor="phone" className="text-xs font-semibold text-foreground">Phone Number (For Campus Handshake OTPs)</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="phone"
-              className="text-base"
+              className="pl-9 h-10 rounded-xl bg-background/50 border-border/70 text-xs sm:text-sm focus-visible:ring-orange-500"
               type="tel"
               placeholder="9876543210"
               {...register("phone", {
@@ -192,28 +207,26 @@ const SignupForm = () => {
               })}
             />
           </div>
+        </div>
 
-          <div className="col-span-full pt-4">
-            <Button
-              size="lg"
-              type="submit"
-              disabled={loading}
-              className="w-full text-lg font-semibold bg-orange-500 hover:bg-orange-600 text-white py-3 cursor-pointer"
-            >
-              {loading ? "Creating Account..." : "Sign Up"}
-            </Button>
-          </div>
-        </form>
+        <Button
+          size="lg"
+          type="submit"
+          disabled={loading}
+          className="w-full h-11 mt-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-500/20 cursor-pointer transition-all"
+        >
+          {loading ? "Setting Up Account..." : "Create Verified Account"}
+        </Button>
+      </form>
 
-        <p className="text-center text-base text-muted-foreground mt-8">
-          Already have an account?{" "}
-          <Link to="/auth/login" className="text-orange-400 font-semibold hover:underline">
-            Login
-          </Link>
-        </p>
-      </motion.div>
-    </section>
-  )
-}
+      <p className="text-center text-xs text-muted-foreground pt-1">
+        Already registered?{" "}
+        <Link to="/auth/login" className="text-orange-600 hover:text-orange-500 font-semibold hover:underline">
+          Sign In
+        </Link>
+      </p>
+    </div>
+  );
+};
 
-export default SignupForm
+export default SignupForm;

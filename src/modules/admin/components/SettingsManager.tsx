@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
-import { fetchAdminSettings, updateAdminSettings } from '../admin.api'
-import type { ISystemSettings } from '../admin.types'
-import { Sliders, RefreshCw, ShieldCheck, Zap } from 'lucide-react'
+import {
+  fetchAdminSettings,
+  fetchAssistantEmbeddingStatus,
+  syncAssistantEmbeddings,
+  updateAdminSettings,
+} from '../admin.api'
+import type { IAssistantEmbeddingStats, ISystemSettings } from '../admin.types'
+import { Bot, Database, RefreshCw, SearchCheck, ShieldCheck, Sliders, Zap } from 'lucide-react'
 import { toast } from '@/components/ui/toast'
 
 export const SettingsManager = () => {
@@ -13,6 +18,9 @@ export const SettingsManager = () => {
   })
   const [loading, setLoading] = useState<boolean>(true)
   const [saving, setSaving] = useState<boolean>(false)
+  const [embeddingStats, setEmbeddingStats] = useState<IAssistantEmbeddingStats | null>(null)
+  const [embeddingsLoading, setEmbeddingsLoading] = useState<boolean>(true)
+  const [syncingEmbeddings, setSyncingEmbeddings] = useState<boolean>(false)
 
   const loadSettings = async () => {
     setLoading(true)
@@ -25,9 +33,33 @@ export const SettingsManager = () => {
     setLoading(false)
   }
 
+  const loadEmbeddingStatus = async () => {
+    setEmbeddingsLoading(true)
+    const res = await fetchAssistantEmbeddingStatus()
+    if (res.stats) {
+      setEmbeddingStats(res.stats)
+    } else if (res.error) {
+      toast.error(res.error)
+    }
+    setEmbeddingsLoading(false)
+  }
+
   useEffect(() => {
     loadSettings()
+    loadEmbeddingStatus()
   }, [])
+
+  const handleSyncEmbeddings = async () => {
+    setSyncingEmbeddings(true)
+    const res = await syncAssistantEmbeddings()
+    if (res.stats) {
+      setEmbeddingStats(res.stats)
+      toast.success(`Assistant embeddings rebuilt for ${res.stats.totalIndexed} active listings.`)
+    } else if (res.error) {
+      toast.error(res.error)
+    }
+    setSyncingEmbeddings(false)
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,6 +82,8 @@ export const SettingsManager = () => {
   }
 
   const commissionNum = parseFloat(settings.platform_commission_percent) || 0
+  const dbIndexedCount = embeddingStats?.dbIndexedCount ?? embeddingStats?.totalIndexed ?? 0
+  const dbActiveIndexedCount = embeddingStats?.dbActiveIndexedCount ?? dbIndexedCount
 
   if (loading) {
     return (
@@ -79,6 +113,88 @@ export const SettingsManager = () => {
         >
           <RefreshCw size={14} /> Refresh Live Values
         </button>
+      </div>
+
+      <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent p-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+              <Bot size={22} />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-foreground">Assistant Search Index</h3>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Rebuild product embeddings when CampusBuddy misses listings or returns too few marketplace results.
+              </p>
+              {embeddingStats?.dbStatusError && (
+                <p className="text-[11px] font-semibold text-destructive mt-1">
+                  {embeddingStats.dbStatusError}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={loadEmbeddingStatus}
+              disabled={embeddingsLoading || syncingEmbeddings}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-card/80 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={embeddingsLoading ? 'animate-spin' : ''} />
+              Check Status
+            </button>
+            <button
+              type="button"
+              onClick={handleSyncEmbeddings}
+              disabled={syncingEmbeddings}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition hover:from-orange-600 hover:to-amber-600 disabled:opacity-60"
+            >
+              <Database size={14} className={syncingEmbeddings ? 'animate-pulse' : ''} />
+              {syncingEmbeddings ? 'Rebuilding...' : 'Rebuild Embeddings'}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-border/60 bg-card/75 p-3">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <SearchCheck size={13} className="text-emerald-500" />
+              Indexed Listings
+            </div>
+            <div className="mt-1 text-2xl font-black text-foreground">
+              {embeddingsLoading ? '...' : dbIndexedCount}
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              DB rows used by pgvector search
+            </p>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-card/75 p-3">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <ShieldCheck size={13} className="text-orange-500" />
+              Active Coverage
+            </div>
+            <div className="mt-1 text-2xl font-black text-foreground">
+              {embeddingsLoading ? '...' : dbActiveIndexedCount}
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Available/rented listings with DB embeddings
+            </p>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-card/75 p-3">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <RefreshCw size={13} className="text-amber-500" />
+              Last Rebuild
+            </div>
+            <div className="mt-1 text-xs font-bold text-foreground">
+              {embeddingStats?.dbLastUpdatedAt || embeddingStats?.lastSyncedAt
+                ? new Date(embeddingStats.dbLastUpdatedAt || embeddingStats.lastSyncedAt || '').toLocaleString()
+                : embeddingsLoading
+                ? 'Checking...'
+                : 'Never synced'}
+            </div>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">

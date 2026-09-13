@@ -12,6 +12,7 @@ export interface INotification {
   title: string;
   message: string;
   link?: string;
+  linkState?: { userId?: string; productId?: string };
   isRead: boolean;
   createdAt: string;
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Save, X, User, Mail, Phone, GraduationCap, Edit2, BookOpen, Calendar } from "lucide-react";
+import { Save, X, User, Mail, Phone, GraduationCap, Edit2, BookOpen, Calendar, ShieldCheck } from "lucide-react";
 import type { RootState } from "@/store/store";
 import { setUser } from "@/store/userSlice";
 import { ImageUploader } from "@/components/ui/ImageUploader";
@@ -158,6 +158,44 @@ const Profile = () => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Digital Student ID Card */}
+      <Card className="mb-6">
+        <CardContent className="flex flex-col items-center space-y-4 p-6">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 flex items-center justify-center text-white text-lg font-bold">
+            {form.name?.charAt(0) || 'S'}
+          </div>
+          <h3 className="text-xl font-bold text-foreground">{form.name || reduxUser.name || 'Student Name'}</h3>
+          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+            <GraduationCap className="w-4 h-4" />
+            <span>{form.college || reduxUser.college || 'College Name'}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <span className="text-sm font-medium text-emerald-600">Verified Student</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Trust Score</div>
+              <div className="text-2xl font-bold text-emerald-600">
+                {profile?.stats?.trustScore == null ? 'No ratings' : `${profile.stats.trustScore.toFixed(2)}/5.0`}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Student Verification</div>
+              <div className="text-2xl font-bold text-amber-600">{profile?.stats?.isVerified ? 'Verified' : 'Pending'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Successful Trades</div>
+              <div className="text-2xl font-bold text-blue-600">{profile?.stats?.successfulTrades ?? 0}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-muted-foreground">Response Rate</div>
+              <div className="text-2xl font-bold text-green-600">{profile?.stats?.responseRate == null ? 'No data' : `${profile.stats.responseRate}%`}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="text-center">
           <div className="flex flex-col items-center justify-center mb-4">
