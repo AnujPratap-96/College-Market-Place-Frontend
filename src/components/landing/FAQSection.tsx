@@ -1,4 +1,3 @@
-// src/components/landing/FAQSection.tsx
 import {
   Accordion,
   AccordionContent,
@@ -6,80 +5,81 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
-const faqs = [
+const FAQS = [
   {
-    question: "Is it free to use?",
-    answer: "Yes, CollegeMart is completely free for all students to buy and sell.",
+    question: "How does the 6-Digit OTP Escrow Handshake work?",
+    answer:
+      "When a buyer clicks 'Buy Now' or wins an auction, their payment is locked safely in the CollegeMart campus escrow. The seller cannot touch these funds yet. Both parties arrange a convenient meetup on campus (e.g. at the library, student cafeteria, or hostel lobby). After the buyer inspects and tests the item, they share a 6-digit OTP from their screen with the seller. Once the seller inputs this OTP, the escrow funds are immediately transferred to the seller's wallet.",
   },
   {
-    question: "What items can I sell?",
+    question: "Can someone from outside my college view or buy my items?",
     answer:
-      "You can sell books, gadgets, notes, electronics, accessories, and more — as long as it's legal.",
+      "No. CollegeMart is built exclusively for verified university communities. Only students with a verified college email (@college.edu, @iitb.ac.in, @bits.ac.in, etc.) can access your campus circle. This ensures 100% of trades happen between real peers on campus grounds.",
   },
   {
-    question: "How is user verification done?",
+    question: "How do Senior Move-Out Live Auctions work?",
     answer:
-      "We verify users via their official college email and a secure OTP process.",
+      "Graduating seniors or students leaving their hostels can put large items (like mini-fridges, coolers, monitors, cycles, or book bundles) on a 24-hour live auction. Students place bids directly from their wallet. If you are outbid by another student, your held bid amount is immediately refunded back to your available balance in real time. The winning bidder gets a pickup OTP to collect the item.",
   },
   {
-    question: "Can I edit or remove a listing?",
+    question: "What happens if an item is not as described during the meetup?",
     answer:
-      "Yes, you can update or delete your listings anytime from your dashboard.",
+      "Since funds are held in escrow, you never lose your money. If the item is defective, damaged, or not as promised, you simply do not give the seller the 6-digit OTP. You can tap 'Cancel Order' or 'Raise Dispute', and your full payment is returned to your wallet.",
   },
   {
-    question: "Who can view my listings?",
+    question: "How do I withdraw money to my UPI or bank account?",
     answer:
-      "Only students from your verified college can view and interact with your listings.",
+      "Whenever you sell an item, deliver a campus gig, or finish an auction, your earnings are deposited directly into your CollegeMart wallet. From the wallet dashboard, you can request an instant withdrawal to your verified UPI ID or bank account anytime with 0 hassle.",
   },
   {
-    question: "Is there a messaging feature?",
+    question: "Are there any hidden platform fees for buyers?",
     answer:
-      "Yes, you can securely message buyers or sellers directly through the platform.",
+      "No. Buying textbooks, gear, and booking peer tutoring on CollegeMart comes with zero hidden fees for students. We believe peer-to-peer campus essentials should remain accessible and affordable for everyone.",
   },
 ];
 
 const FAQSection = () => {
   return (
-    <section className="py-24 px-6 bg-background border-t border-border">
-      <div className="max-w-4xl mx-auto text-center space-y-12">
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-4xl font-bold tracking-tight"
-        >
-          Frequently Asked <span className="text-orange-400">Questions</span>
-        </motion.h2>
+    <section id="faq" className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t border-border/80">
+      <div className="text-center space-y-4 mb-14">
+        <Badge variant="outline" className="px-3 py-1 text-xs font-semibold text-orange-600 border-orange-400/40 bg-orange-500/10">
+          CLEAR ANSWERS
+        </Badge>
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground">
+          Frequently Asked Questions
+        </h2>
+        <p className="text-muted-foreground text-base sm:text-lg">
+          Everything you need to know about campus trading, escrow security, and senior auctions.
+        </p>
+      </div>
 
-        <div className="space-y-6">
-          {faqs.map((faq, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
+      <div className="space-y-4">
+        {FAQS.map((faq, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: index * 0.08 }}
+          >
+            <Accordion
+              type="single"
+              collapsible
+              className="rounded-2xl bg-card border border-border/80 shadow-xs px-6 py-2 transition-all hover:border-orange-500/30"
             >
-              <Accordion
-                type="single"
-                collapsible
-                className="rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-md px-6 py-4 text-left transition-all duration-300 hover:shadow-lg"
-              >
-                <AccordionItem value={`item-${index}`}>
-                  <AccordionTrigger className="text-lg font-medium">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-sm text-foreground/80">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </motion.div>
-          ))}
-        </div>
+              <AccordionItem value={`item-${index}`} className="border-b-0">
+                <AccordionTrigger className="text-base sm:text-lg font-bold text-foreground text-left py-4 hover:no-underline hover:text-orange-500 transition-colors">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed pb-4 pt-1">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </motion.div>
+        ))}
       </div>
     </section>
   );

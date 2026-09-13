@@ -27,10 +27,9 @@ const Layout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="min-h-screen w-full relative flex flex-col bg-background text-foreground">
       <Header />
-      {/* Adjust padding-top to avoid overlap with fixed header */}
-      <main className="pt-20 px-4 pb-6">
+      <main className="pt-16 w-full flex-1">
         <Outlet />
       </main>
     </div>
