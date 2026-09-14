@@ -14,6 +14,8 @@ import {
   Gavel,
   LogOut,
   GraduationCap,
+  HelpCircle,
+  TrendingUp,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { RootState } from "@/store/store";
@@ -28,10 +30,12 @@ import { toast } from "@/components/ui/toast";
 const navLinks = [
   { to: "/dashboard", label: "Browse", icon: <LayoutDashboard size={20} /> },
   { to: "/dashboard/products", label: "My Listings", icon: <Package size={20} /> },
+  { to: "/dashboard/wanted", label: "Wanted Board", icon: <HelpCircle size={20} /> },
   { to: "/dashboard/auctions", label: "Live Auctions", icon: <Gavel size={20} /> },
   { to: "/dashboard/orders", label: "Orders", icon: <ShoppingCart size={20} /> },
   { to: "/dashboard/subscriptions", label: "Subscriptions", icon: <CalendarCheck size={20} /> },
   { to: "/dashboard/messages", label: "Messages", icon: <MessageSquare size={20} /> },
+  { to: "/dashboard/analytics", label: "Analytics", icon: <TrendingUp size={20} /> },
   { to: "/dashboard/profile", label: "Profile", icon: <User size={20} /> },
 ];
 
@@ -93,11 +97,12 @@ const Sidebar = () => {
     <>
       {isMobile && (
         <button
+          type="button"
           aria-label="Toggle menu"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="fixed top-20 left-4 z-50 p-2 rounded-lg bg-card border border-border shadow-lg hover:bg-accent"
+          className="fixed bottom-6 left-6 z-50 w-12 h-12 rounded-full bg-card/95 border border-border/80 shadow-xl shadow-black/25 flex items-center justify-center text-foreground hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md"
         >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          {mobileOpen ? <X size={22} className="text-orange-500" /> : <Menu size={22} />}
         </button>
       )}
 
@@ -111,16 +116,16 @@ const Sidebar = () => {
       <aside
         className={`
           ${isMobile
-            ? `fixed top-0 left-0 z-50 h-screen w-64 transform transition-transform duration-300 ease-in-out ${
+            ? `fixed inset-y-0 left-0 z-50 h-[100dvh] max-h-[100dvh] w-72 transform transition-transform duration-300 ease-in-out pb-[env(safe-area-inset-bottom,16px)] ${
                 mobileOpen ? "translate-x-0" : "-translate-x-full"
               }`
             : "fixed top-16 left-0 bottom-0 z-30 w-64 h-[calc(100vh-4rem)]"
           }
-          bg-card/90 backdrop-blur-xl border-r border-border/80
+          bg-card/95 backdrop-blur-xl border-r border-border/80
           flex flex-col overflow-hidden
         `}
       >
-        <div className="p-6 border-b border-border md:hidden">
+        <div className="p-4 border-b border-border flex items-center justify-between md:hidden">
           <Link to="/dashboard" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
               <GraduationCap className="w-5 h-5" />
@@ -134,6 +139,14 @@ const Sidebar = () => {
               </span>
             </div>
           </Link>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <div className="p-4 shrink-0">
@@ -149,7 +162,7 @@ const Sidebar = () => {
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-2 scroll-smooth">
+        <nav className="flex-1 overflow-y-auto px-3 py-2 min-h-0 scroll-smooth">
           <ul className="space-y-1">
             {[
               ...navLinks,
@@ -199,7 +212,7 @@ const Sidebar = () => {
           </ul>
         </nav>
 
-        <div className="p-3 border-t border-border shrink-0 space-y-2">
+        <div className="p-3 border-t border-border bg-card/95 shrink-0 space-y-2 mt-auto pb-6 md:pb-3">
           <Link
             to="/dashboard/profile"
             onClick={() => setMobileOpen(false)}

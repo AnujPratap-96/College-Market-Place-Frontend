@@ -33,6 +33,7 @@ import {
   fetchLedger,
   withdrawWallet,
   createPaymentOrder,
+  fetchWithdrawals,
 } from '../wallet.api'
 import type { ILedgerEntry, LedgerType } from '../wallet.types'
 import { toast } from '@/components/ui/toast'
@@ -82,10 +83,22 @@ export const WalletModal = ({
     setIsLedgerLoading(false)
   }
 
+  const [withdrawals, setWithdrawals] = useState<
+    Array<{ id: string; amount: number; upiId: string; status: string; utr?: string; createdAt: string }>
+  >([])
+
+  const loadWithdrawals = async () => {
+    const res = await fetchWithdrawals()
+    if (res.withdrawals) {
+      setWithdrawals(res.withdrawals)
+    }
+  }
+
   useEffect(() => {
     if (open) {
       dispatch(loadWallet())
       loadLedger()
+      loadWithdrawals()
     }
   }, [open, dispatch])
 
@@ -93,7 +106,10 @@ export const WalletModal = ({
     if (open && activeTab === 'ledger') {
       loadLedger()
     }
-  }, [activeTab, open])
+    if (open && activeTab === 'withdraw') {
+      loadWithdrawals()
+    }
+  }, [open, activeTab])
 
   const handleTopup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -116,6 +132,7 @@ export const WalletModal = ({
       !orderData.keyId.includes('placeholder') &&
       typeof (window as any).Razorpay !== 'undefined'
     ) {
+      onOpenChange(false)
       const rzp = new (window as any).Razorpay({
         key: orderData.keyId,
         amount: orderData.amount,
@@ -124,14 +141,12 @@ export const WalletModal = ({
         description: 'Student Wallet Recharge',
         order_id: orderData.orderId,
         handler: async (_response: any) => {
-          // Wallet credit is performed only by the verified Razorpay webhook.
           await Promise.resolve()
           setIsTopupLoading(false)
-          {
-            toast.success(`₹${amountNum.toFixed(2)} added to your wallet via Razorpay!`)
-            setTopupAmount('')
-            window.setTimeout(() => { dispatch(loadWallet()); loadLedger() }, 2500)
-          }
+          onOpenChange(true)
+          toast.success(`₹${amountNum.toFixed(2)} added to your wallet via Razorpay!`)
+          setTopupAmount('')
+          window.setTimeout(() => { dispatch(loadWallet()); loadLedger() }, 2500)
         },
         prefill: {
           name: user.name,
@@ -144,6 +159,7 @@ export const WalletModal = ({
         modal: {
           ondismiss: () => {
             setIsTopupLoading(false)
+            onOpenChange(true)
           },
         },
       })
@@ -233,6 +249,7 @@ export const WalletModal = ({
       setWithdrawAmount('')
       dispatch(loadWallet())
       loadLedger()
+      loadWithdrawals()
     }
   }
 
@@ -559,6 +576,51 @@ export const WalletModal = ({
                   : `Withdraw ₹${withdrawAmount ? parseFloat(withdrawAmount).toFixed(2) : '0.00'} to UPI`}
               </Button>
             </form>
+
+            <div className="mt-5 pt-4 border-t border-border/60">
+              <div className="flex items-center justify-between pb-2">
+                <span className="text-xs font-semibold text-foreground">
+                  Recent Payout History
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={loadWithdrawals}
+                  disabled={isWithdrawLoading}
+                  className="h-6 text-[11px] flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className={`size-3 ${isWithdrawLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+
+              {withdrawals.length === 0 ? (
+                <div className="py-6 text-center text-xs text-muted-foreground border border-dashed rounded-xl">
+                  No withdrawal requests yet. Earnings you withdraw to UPI will appear here.
+                </div>
+              ) : (
+                <div className="max-h-44 overflow-y-auto space-y-2 divide-y divide-border/40 pr-1">
+                  {withdrawals.map((w) => (
+                    <div key={w.id} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">₹{w.amount.toFixed(2)}</span>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded-full font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                            {w.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">To: {w.upiId}</p>
+                        {w.utr && <p className="text-[10px] font-mono text-muted-foreground/70">Ref: {w.utr}</p>}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(w.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="ledger" className="space-y-3 pt-3">

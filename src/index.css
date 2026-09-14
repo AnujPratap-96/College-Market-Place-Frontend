@@ -154,3 +154,8 @@
     display: none;
   }
 }
+
+.razorpay-container {
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+}

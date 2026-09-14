@@ -15,6 +15,7 @@ import {
   Tag,
   MessageSquare,
   Gavel,
+  Star,
 } from "lucide-react";
 import type { AppDispatch, RootState } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
@@ -27,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import OtpHandshakeModal from "./OtpHandshakeModal";
 import DisputeModal from "./DisputeModal";
+import { ReviewModal } from "@/modules/reviews/components/ReviewModal";
 import { toast } from "@/components/ui/toast";
 
 interface OrderCardProps {
@@ -160,6 +162,7 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
   const [otpType, setOtpType] = useState<"PICKUP" | "RETURN">("PICKUP");
 
   const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   const formattedDate = new Date(order.createdAt).toLocaleDateString(undefined, {
@@ -527,6 +530,18 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                   )}
                 </>
               )}
+
+              {order.status === "COMPLETED" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setReviewModalOpen(true)}
+                  className="text-xs h-9 px-4 rounded-xl gap-1.5 font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/20 cursor-pointer"
+                >
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  Rate & Review
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -549,6 +564,21 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
           onClose={() => setDisputeModalOpen(false)}
           order={order}
           onSuccess={onRefresh}
+        />
+      )}
+
+      {reviewModalOpen && (
+        <ReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          orderId={order.id}
+          orderNumber={order.orderNumber}
+          productTitle={order.product?.title}
+          targetName={counterparty?.name}
+          onSuccess={() => {
+            setReviewModalOpen(false);
+            onRefresh();
+          }}
         />
       )}
     </>

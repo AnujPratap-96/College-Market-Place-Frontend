@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Clock, Calendar, Trash2, ShieldCheck, Tag, Sparkles, Gavel, Repeat } from "lucide-react";
+import { MapPin, Clock, Calendar, Trash2, ShieldCheck, Tag, Sparkles, Gavel, Repeat, Pencil } from "lucide-react";
 import type { IProduct } from "../product.types";
 
 interface ProductCardProps {
@@ -114,18 +114,30 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
               </div>
             ) : null}
             {onDelete ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDelete(item.id);
-                }}
-                className="p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-white backdrop-blur-md transition-colors shadow-xs text-muted-foreground cursor-pointer"
-                title="Delete listing"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <>
+                <Link
+                  to={`/dashboard/products/${item.id}/edit`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="p-1.5 rounded-full bg-background/90 hover:bg-orange-500 hover:text-white backdrop-blur-md transition-colors shadow-xs text-muted-foreground cursor-pointer"
+                  title="Edit listing"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(item.id);
+                  }}
+                  className="p-1.5 rounded-full bg-background/90 hover:bg-destructive hover:text-white backdrop-blur-md transition-colors shadow-xs text-muted-foreground cursor-pointer"
+                  title="Delete listing"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
             ) : null}
           </div>
         )}

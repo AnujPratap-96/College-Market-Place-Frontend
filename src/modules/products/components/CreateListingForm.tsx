@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, Gavel, Tag, Clock, Sparkles, Repeat } from "lucide-react";
-import { ImageUploader } from "@/components/ui/ImageUploader";
+import { Loader2, Gavel, Tag, Clock, Sparkles, Repeat, Camera, CheckCircle2 } from "lucide-react";
+import Axios from "@/utils/Axios";
+import { MultiImageUploader } from "@/components/ui/MultiImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +39,7 @@ const CreateListingForm = () => {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([]);
 
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [rentalDuration, setRentalDuration] = useState("");
@@ -50,6 +51,74 @@ const CreateListingForm = () => {
   const [reservePrice, setReservePrice] = useState("");
   const [durationHours, setDurationHours] = useState("24");
   const [antiSnipingSeconds, setAntiSnipingSeconds] = useState("60");
+
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<{
+    condition?: string;
+    suggestedPrice?: number;
+    priceRange?: { min: number; max: number };
+    tags?: string[];
+  } | null>(null);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAiAutoFill = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (JPG, PNG, WebP).");
+      if (aiFileInputRef.current) aiFileInputRef.current.value = "";
+      return;
+    }
+
+    try {
+      setAiAnalyzing(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await Axios.post("/upload/direct", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const uploadedUrl = uploadRes.data?.data?.publicUrl || uploadRes.data?.publicUrl;
+
+      if (!uploadedUrl) {
+        throw new Error("Image upload failed.");
+      }
+
+      setImages((prev) => (prev.includes(uploadedUrl) ? prev : [uploadedUrl, ...prev]));
+
+      const estimateRes = await Axios.post("/products/ai-estimate-listing", {
+        imageUrl: uploadedUrl,
+      });
+      const data = estimateRes.data?.data || estimateRes.data;
+
+      if (data?.title) {
+        setTitle(data.title);
+      }
+      if (data?.category) {
+        setCategory(data.category);
+      }
+      if (data?.suggestedPrice) {
+        setPrice(String(data.suggestedPrice));
+      }
+      if (data?.description) {
+        setDescription(data.description);
+      }
+
+      setAiAnalysisResult({
+        condition: data?.condition,
+        suggestedPrice: data?.suggestedPrice,
+        priceRange: data?.priceRange,
+        tags: data?.tags,
+      });
+
+      toast.success("Listing auto-filled with AI valuation!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || "AI auto-fill failed.");
+    } finally {
+      setAiAnalyzing(false);
+      if (aiFileInputRef.current) aiFileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +165,8 @@ const CreateListingForm = () => {
       price: numPrice,
       category,
       type,
-      imageUrl: imageUrl.trim() || undefined,
+      images,
+      imageUrl: images[0] || undefined,
       securityDeposit: type === "RENT" && securityDeposit ? parseFloat(securityDeposit) : undefined,
       rentalDuration: type === "RENT" && rentalDuration.trim() ? rentalDuration.trim() : undefined,
       serviceDuration: type === "SERVICE" && serviceDuration.trim() ? serviceDuration.trim() : undefined,
@@ -138,7 +208,74 @@ const CreateListingForm = () => {
           </p>
         </div>
 
-        {/* Segmented Listing Type Chips */}
+        <div className="p-4 rounded-2xl border border-dashed border-primary/40 bg-gradient-to-r from-primary/5 via-orange-500/5 to-amber-500/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <input
+            ref={aiFileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAiAutoFill}
+          />
+          <div className="flex items-center gap-3">
+            <div className="size-11 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-xs shrink-0">
+              <Sparkles className="size-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">AI Visual Listing Creator</h3>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-orange-500/15 text-orange-600 dark:text-orange-400">
+                  AUTO-DETECT
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Snap or upload a photo of your item to auto-fill title, category, description & fair campus price.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={aiAnalyzing}
+            onClick={() => aiFileInputRef.current?.click()}
+            className="h-10 px-4 rounded-xl gap-2 font-medium shrink-0 border-primary/30 hover:bg-primary/10 cursor-pointer"
+          >
+            {aiAnalyzing ? (
+              <>
+                <Loader2 className="size-4 animate-spin text-orange-500" />
+                <span className="text-xs">Analyzing Image...</span>
+              </>
+            ) : (
+              <>
+                <Camera className="size-4 text-orange-500" />
+                <span className="text-xs">Snap / Upload Photo</span>
+              </>
+            )}
+          </Button>
+        </div>
+
+        {aiAnalysisResult && (
+          <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
+              <span>
+                Item estimated in <strong>{aiAnalysisResult.condition}</strong> condition. Suggested campus price: <strong>₹{aiAnalysisResult.suggestedPrice}</strong>
+                {aiAnalysisResult.priceRange && (
+                  <span className="opacity-80"> (Campus range: ₹{aiAnalysisResult.priceRange.min} - ₹{aiAnalysisResult.priceRange.max})</span>
+                )}
+              </span>
+            </div>
+            {aiAnalysisResult.tags && aiAnalysisResult.tags.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {aiAnalysisResult.tags.map((tag, idx) => (
+                  <span key={idx} className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 text-[10px] font-medium">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Listing Type *</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -388,11 +525,11 @@ const CreateListingForm = () => {
             />
           </div>
 
-          <ImageUploader
-            label="Product Photo"
+          <MultiImageUploader
+            images={images}
+            onChange={setImages}
             folder="products"
-            value={imageUrl}
-            onChange={setImageUrl}
+            maxImages={6}
           />
 
           <div className="flex items-center gap-3 pt-4 border-t border-border/60">

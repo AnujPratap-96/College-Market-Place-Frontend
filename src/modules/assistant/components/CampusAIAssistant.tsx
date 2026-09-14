@@ -10,6 +10,7 @@ import {
   Wallet,
   ShieldCheck,
   ChevronRight,
+  Filter,
 } from "lucide-react";
 import { askAssistant } from "../assistant.api";
 import type {
@@ -28,17 +29,32 @@ interface ChatItem {
   timestamp: string;
 }
 
+const CATEGORY_OPTIONS = [
+  { value: "all", label: "All Categories" },
+  { value: "books", label: "Books & Study Material" },
+  { value: "stationery", label: "Stationery & Tools" },
+  { value: "electronics", label: "Electronics & Gadgets" },
+  { value: "cycles", label: "Bicycles & Mobility" },
+  { value: "clothing", label: "Clothing & Uniforms" },
+  { value: "essentials", label: "Campus Essentials" },
+  { value: "furniture", label: "Furniture" },
+  { value: "food", label: "Food & Meals" },
+  { value: "services", label: "Services & Tutoring" },
+  { value: "other", label: "Other" },
+];
+
 export const CampusAIAssistant: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [messages, setMessages] = useState<ChatItem[]>([
     {
       id: "initial",
       role: "assistant",
       content:
-        "Hey there! I am **CampusBuddy**, your campus AI assistant. How can I help you today? You can ask me to find items to buy or rent, track your active orders & pickup OTPs, check your wallet balance, or explain campus escrow rules!",
+        "Hey there! I am **CampusBuddy**, your campus AI assistant. How can I help you today? You can ask me to find items to buy or rent, check your purchases or sales orders, track handover OTPs, check your wallet balance, or filter by category above!",
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -52,7 +68,7 @@ export const CampusAIAssistant: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isSending, isOpen]);
 
-  const handleSendMessage = async (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string, categoryOverride?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text || isSending) return;
 
@@ -70,12 +86,15 @@ export const CampusAIAssistant: React.FC = () => {
     setInputText("");
     setIsSending(true);
 
+    const activeCat = categoryOverride !== undefined ? categoryOverride : selectedCategory;
+
     try {
       const response = await askAssistant(
         [...messages, userMessage].map((m) => ({
           role: m.role,
           content: m.content,
-        }))
+        })),
+        activeCat !== "all" ? activeCat : undefined
       );
 
       const botMessage: ChatItem = {
@@ -108,6 +127,16 @@ export const CampusAIAssistant: React.FC = () => {
       ]);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
+    const catObj = CATEGORY_OPTIONS.find((c) => c.value === cat);
+    if (cat !== "all") {
+      handleSendMessage(`Show available items in ${catObj?.label || cat}`, cat);
+    } else {
+      handleSendMessage("Show all available campus listings", "all");
     }
   };
 
@@ -164,6 +193,24 @@ export const CampusAIAssistant: React.FC = () => {
             </button>
           </div>
 
+          <div className="bg-muted/60 border-b border-border px-3.5 py-2 flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold shrink-0">
+              <Filter size={13} className="text-orange-600" />
+              <span>Category:</span>
+            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="text-xs bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer max-w-[210px] truncate"
+            >
+              {CATEGORY_OPTIONS.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20">
             {messages.map((m) => (
               <div
@@ -191,17 +238,36 @@ export const CampusAIAssistant: React.FC = () => {
                           key={p.id}
                           className="bg-muted/40 hover:bg-muted border border-border/80 rounded-xl p-2.5 transition-colors flex items-center justify-between gap-3"
                         >
-                          <div className="min-w-0">
-                            <div className="font-semibold text-xs truncate">
-                              {p.title}
-                            </div>
-                            <div className="text-xs font-bold text-orange-600 mt-0.5 flex items-center gap-1.5">
-                              <span>₹{p.price} • {p.type}</span>
-                              {p.status === "RENTED" && (
-                                <span className="bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[10px] font-semibold px-1.5 py-0.5 rounded">
-                                  Rent Later
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            {p.imageUrl ? (
+                              <img
+                                src={p.imageUrl}
+                                alt={p.title}
+                                className="w-11 h-11 rounded-lg object-cover border border-border/60 shrink-0 bg-background"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center text-muted-foreground border border-border/60 shrink-0">
+                                <Package size={16} />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-xs truncate">
+                                {p.title}
+                              </div>
+                              <div className="text-xs font-bold text-orange-600 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                <span>₹{p.price} • {p.type}</span>
+                                <span className="bg-background text-muted-foreground border border-border text-[10px] font-medium px-1.5 py-0.5 rounded capitalize">
+                                  {p.category}
                                 </span>
-                              )}
+                                {p.status === "RENTED" && (
+                                  <span className="bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                                    Rent Later
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           <button
@@ -221,27 +287,69 @@ export const CampusAIAssistant: React.FC = () => {
                   {m.orders && m.orders.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                        Your Recent Orders
+                        Recent Orders
                       </div>
                       {m.orders.map((o) => (
                         <div
                           key={o.id}
-                          className="bg-muted/40 border border-border rounded-xl p-2.5 text-xs space-y-1"
+                          className="bg-muted/40 border border-border rounded-xl p-2.5 text-xs space-y-2"
                         >
                           <div className="flex items-center justify-between font-bold">
-                            <span>#{o.orderNumber}</span>
+                            <span className="flex items-center gap-1.5">
+                              #{o.orderNumber}
+                              <span
+                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold border ${
+                                  o.role === "Seller"
+                                    ? "bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                                    : "bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                                }`}
+                              >
+                                {o.role === "Seller" ? "Your Sale" : "Purchase"}
+                              </span>
+                            </span>
                             <span className="text-orange-600">₹{o.totalAmount}</span>
                           </div>
-                          <div className="text-muted-foreground truncate">
-                            {o.productTitle}
+
+                          <div className="flex items-center gap-2.5 py-0.5">
+                            {o.productImage ? (
+                              <img
+                                src={o.productImage}
+                                alt={o.productTitle}
+                                className="w-11 h-11 rounded-lg object-cover border border-border/60 shrink-0 bg-background"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center text-muted-foreground border border-border/60 shrink-0">
+                                <Package size={16} />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-foreground truncate font-semibold">
+                                {o.productTitle}
+                              </div>
+                              {o.counterparty && (
+                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                  {o.role === "Seller" ? "Buyer: " : "Seller: "}
+                                  <span className="font-semibold text-foreground">{o.counterparty}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between pt-1">
+
+                          <div className="flex items-center justify-between pt-1 border-t border-border/40">
                             <span className="bg-background border px-2 py-0.5 rounded text-[10px] font-bold">
                               {o.status}
                             </span>
                             {o.pickupOtp && o.status === "ESCROW_HELD" && (
                               <span className="font-mono font-black text-xs text-orange-600 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded">
                                 OTP: {o.pickupOtp}
+                              </span>
+                            )}
+                            {!o.pickupOtp && o.status === "ESCROW_HELD" && o.role === "Seller" && (
+                              <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded">
+                                Ask Buyer OTP
                               </span>
                             )}
                           </div>
@@ -293,16 +401,34 @@ export const CampusAIAssistant: React.FC = () => {
 
             <div className="flex flex-wrap gap-1.5 pt-2">
               <button
-                onClick={() => handleSendMessage("Show textbooks and calculators")}
+                onClick={() => handleCategoryChange("books")}
                 className="inline-flex items-center gap-1 bg-background hover:bg-muted border border-border px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
               >
-                <BookOpen size={12} /> Textbooks
+                <BookOpen size={12} /> Books
               </button>
               <button
-                onClick={() => handleSendMessage("Where is my order and OTP?")}
+                onClick={() => handleCategoryChange("cycles")}
                 className="inline-flex items-center gap-1 bg-background hover:bg-muted border border-border px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
               >
-                <Package size={12} /> Orders & OTP
+                🚲 Cycles
+              </button>
+              <button
+                onClick={() => handleCategoryChange("electronics")}
+                className="inline-flex items-center gap-1 bg-background hover:bg-muted border border-border px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+              >
+                💻 Electronics
+              </button>
+              <button
+                onClick={() => handleSendMessage("Show my purchases & orders")}
+                className="inline-flex items-center gap-1 bg-background hover:bg-muted border border-border px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+              >
+                <Package size={12} /> Purchases & OTP
+              </button>
+              <button
+                onClick={() => handleSendMessage("Show my sell orders & sales")}
+                className="inline-flex items-center gap-1 bg-background hover:bg-muted border border-border px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
+              >
+                🏷️ My Sales
               </button>
               <button
                 onClick={() => handleSendMessage("What is my wallet balance?")}

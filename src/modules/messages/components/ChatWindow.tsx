@@ -1,13 +1,34 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Send, MessagesSquare, GraduationCap, Loader2, ArrowLeft } from 'lucide-react';
+import {
+  Send,
+  MessagesSquare,
+  GraduationCap,
+  Loader2,
+  ArrowLeft,
+  Image as ImageIcon,
+  Mic,
+  Square,
+  Trash2,
+  Handshake,
+} from 'lucide-react';
 import type { RootState } from '@/store/store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/toast';
 import type { IMessage } from '../message.types';
 import { MessageBubble } from './MessageBubble';
 import { ProductContextBanner } from './ProductContextBanner';
 import { TypingIndicator } from './TypingIndicator';
+import { MakeOfferModal } from '@/modules/negotiations/components/MakeOfferModal';
+import { uploadChatMediaApi } from '../message.api';
+
+export interface ChatSendMessageData {
+  content?: string;
+  mediaType?: 'TEXT' | 'IMAGE' | 'AUDIO';
+  mediaUrl?: string;
+  audioDuration?: number;
+}
 
 export interface ChatWindowProps {
   recipient: {
@@ -26,7 +47,7 @@ export interface ChatWindowProps {
   } | null;
   messages: IMessage[];
   isTyping: boolean;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (data: ChatSendMessageData | string) => void;
   onTyping: (isTyping: boolean) => void;
   loading: boolean;
   onBack?: () => void;
@@ -51,6 +72,16 @@ export const ChatWindow = ({
 }: ChatWindowProps) => {
   const currentUserId = useSelector((state: RootState) => state.user?.id);
   const [inputText, setInputText] = useState('');
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isTypingActiveRef = useRef(false);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,7 +120,10 @@ export const ChatWindow = ({
     if (!trimmed) return;
 
     stopTyping();
-    onSendMessage(trimmed);
+    onSendMessage({
+      content: trimmed,
+      mediaType: 'TEXT',
+    });
     setInputText('');
   };
 
@@ -100,10 +134,145 @@ export const ChatWindow = ({
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only image photos are supported. Videos are not allowed.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size exceeds 10MB limit.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    try {
+      setIsUploadingMedia(true);
+      const res = await uploadChatMediaApi(file);
+      setIsUploadingMedia(false);
+
+      if (res.error || !res.mediaUrl) {
+        toast.error(res.error || 'Failed to upload photo.');
+      } else {
+        onSendMessage({
+          content: 'Sent a photo',
+          mediaType: 'IMAGE',
+          mediaUrl: res.mediaUrl,
+        });
+      }
+    } catch {
+      setIsUploadingMedia(false);
+      toast.error('Failed to upload photo.');
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds((prev) => {
+          if (prev >= 120) {
+            stopAndSendRecording();
+            return 120;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } catch {
+      toast.error('Microphone permission denied or not available.');
+    }
+  };
+
+  const cancelRecording = () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+    audioChunksRef.current = [];
+    setIsRecording(false);
+    setRecordingSeconds(0);
+  };
+
+  const stopAndSendRecording = () => {
+    if (!mediaRecorderRef.current) return;
+
+    const duration = recordingSeconds;
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      mediaRecorderRef.current?.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+      setRecordingSeconds(0);
+
+      if (duration < 1) {
+        toast.info('Voice note too short.');
+        return;
+      }
+
+      try {
+        setIsUploadingMedia(true);
+        const res = await uploadChatMediaApi(audioBlob, `voice-${Date.now()}.webm`);
+        setIsUploadingMedia(false);
+
+        if (res.error || !res.mediaUrl) {
+          toast.error(res.error || 'Failed to upload voice note.');
+        } else {
+          onSendMessage({
+            content: 'Voice note',
+            mediaType: 'AUDIO',
+            mediaUrl: res.mediaUrl,
+            audioDuration: duration,
+          });
+        }
+      } catch {
+        setIsUploadingMedia(false);
+        toast.error('Failed to send voice note.');
+      }
+    };
+
+    mediaRecorderRef.current.stop();
+  };
+
+  const formatRecordingTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   useEffect(() => {
     return () => {
-      if (typingTimerRef.current) {
-        clearTimeout(typingTimerRef.current);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stream.getTracks().forEach((t) => t.stop());
       }
     };
   }, []);
@@ -111,6 +280,7 @@ export const ChatWindow = ({
   useEffect(() => {
     setInputText('');
     stopTyping();
+    cancelRecording();
   }, [recipient?.id, stopTyping]);
 
   useEffect(() => {
@@ -164,6 +334,19 @@ export const ChatWindow = ({
             </div>
           )}
         </div>
+
+        {productContext && productContext.type === 'SELL' && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1 text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/20"
+            onClick={() => setIsOfferModalOpen(true)}
+          >
+            <Handshake className="size-3.5" />
+            Make Offer
+          </Button>
+        )}
       </div>
 
       {productContext && <ProductContextBanner product={productContext} />}
@@ -180,7 +363,7 @@ export const ChatWindow = ({
               No messages yet
             </p>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-              Say hello to start the conversation with {recipient.name}!
+              Say hello or make an offer to start the conversation with {recipient.name}!
             </p>
           </div>
         ) : (
@@ -193,6 +376,7 @@ export const ChatWindow = ({
                 key={message.id || `${message.senderId}-${message.createdAt}`}
                 message={message}
                 isSelf={isSelf}
+                currentUserId={currentUserId}
               />
             );
           })
@@ -208,26 +392,103 @@ export const ChatWindow = ({
       </div>
 
       <div className="p-3 border-t border-border/80 bg-card/60 backdrop-blur-xs shrink-0">
-        <div className="flex items-end gap-2 max-w-4xl mx-auto">
-          <textarea
-            value={inputText}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            rows={1}
-            className="flex-1 bg-muted/40 border border-input rounded-xl px-3.5 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/50 resize-none max-h-32 min-h-[44px] leading-relaxed transition-all"
-          />
-          <Button
-            type="button"
-            onClick={handleSend}
-            disabled={!inputText.trim()}
-            size="icon"
-            className="size-11 rounded-xl shrink-0 cursor-pointer"
-          >
-            <Send className="size-4" />
-          </Button>
-        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {isRecording ? (
+          <div className="flex items-center justify-between gap-3 max-w-4xl mx-auto bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <span className="size-2.5 rounded-full bg-destructive animate-pulse" />
+              <span className="text-xs font-medium text-destructive">
+                Recording Voice Note... ({formatRecordingTime(recordingSeconds)})
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-8 rounded-lg text-muted-foreground hover:text-destructive"
+                onClick={cancelRecording}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 gap-1.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground text-xs"
+                onClick={stopAndSendRecording}
+              >
+                <Square className="size-3 fill-current" />
+                Done & Send
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-end gap-2 max-w-4xl mx-auto">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={isUploadingMedia}
+              onClick={() => fileInputRef.current?.click()}
+              className="size-11 rounded-xl shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              {isUploadingMedia ? (
+                <Loader2 className="size-5 animate-spin" />
+              ) : (
+                <ImageIcon className="size-5" />
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={isUploadingMedia}
+              onClick={startRecording}
+              className="size-11 rounded-xl shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <Mic className="size-5" />
+            </Button>
+
+            <textarea
+              value={inputText}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              rows={1}
+              className="flex-1 bg-muted/40 border border-input rounded-xl px-3.5 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/50 resize-none max-h-32 min-h-[44px] leading-relaxed transition-all"
+            />
+
+            <Button
+              type="button"
+              onClick={handleSend}
+              disabled={!inputText.trim()}
+              size="icon"
+              className="size-11 rounded-xl shrink-0 cursor-pointer"
+            >
+              <Send className="size-4" />
+            </Button>
+          </div>
+        )}
       </div>
+
+      {productContext && (
+        <MakeOfferModal
+          isOpen={isOfferModalOpen}
+          onClose={() => setIsOfferModalOpen(false)}
+          product={productContext}
+          onOfferCreated={() => {
+            setIsOfferModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };

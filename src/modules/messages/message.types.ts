@@ -1,3 +1,28 @@
+export type MessageMediaType = 'TEXT' | 'IMAGE' | 'AUDIO';
+
+export type NegotiationStatus = 'PENDING' | 'ACCEPTED' | 'COUNTERED' | 'DECLINED' | 'EXPIRED';
+
+export interface INegotiationOffer {
+  id: string;
+  productId: string;
+  buyerId: string;
+  sellerId: string;
+  originalPrice: number;
+  offeredPrice: number;
+  status: NegotiationStatus;
+  offeredById: string;
+  messageId?: string;
+  orderId?: string;
+  createdAt: string;
+  updatedAt: string;
+  product?: {
+    id: string;
+    title: string;
+    price: number;
+    imageUrl?: string;
+  };
+}
+
 export interface IMessage {
   id: string;
   senderId: string;
@@ -6,6 +31,10 @@ export interface IMessage {
   content: string;
   isRead: boolean;
   createdAt: string;
+  mediaType?: MessageMediaType;
+  mediaUrl?: string;
+  audioDuration?: number;
+  offer?: INegotiationOffer;
   product?: {
     id: string;
     title: string;
@@ -43,6 +72,9 @@ export interface SendMessagePayload {
   toUserId: string;
   content: string;
   productId?: string;
+  mediaType?: MessageMediaType;
+  mediaUrl?: string;
+  audioDuration?: number;
 }
 
 export interface TypingPayload {

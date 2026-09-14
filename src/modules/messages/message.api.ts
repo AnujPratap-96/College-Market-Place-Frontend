@@ -95,3 +95,25 @@ export const markConversationRead = async (
     };
   }
 };
+
+export const uploadChatMediaApi = async (
+  file: File | Blob,
+  filename?: string
+): Promise<{ mediaUrl?: string; mediaType?: 'IMAGE' | 'AUDIO'; error?: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file, filename || (file instanceof File ? file.name : 'audio.webm'));
+    const res = await Axios.post('/messages/media-upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    const data = res.data?.data || res.data;
+    return {
+      mediaUrl: data.mediaUrl,
+      mediaType: data.mediaType,
+    };
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to upload media') };
+  }
+};

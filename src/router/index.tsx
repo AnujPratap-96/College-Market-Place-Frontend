@@ -22,6 +22,9 @@ import Subscriptions from "@/pages/Subscriptions";
 import Messages from "@/pages/Messages";
 import Auctions from "@/pages/Auctions";
 import AdminDashboard from "@/pages/AdminDashboard";
+import WantedBoard from "@/pages/WantedBoard";
+import EditListing from "@/pages/EditListing";
+import SellerAnalytics from "@/pages/SellerAnalytics";
 
 const router = createBrowserRouter([
   {
@@ -57,10 +60,13 @@ const router = createBrowserRouter([
       { path: "products", element: <Products /> },
       { path: "products/create", element: <CreateListing /> },
       { path: "products/:id", element: <ProductDetail /> },
+      { path: "products/:id/edit", element: <EditListing /> },
       { path: "orders", element: <Orders /> },
       { path: "subscriptions", element: <Subscriptions /> },
+      { path: "wanted", element: <WantedBoard /> },
       { path: "auctions", element: <Auctions /> },
       { path: "messages", element: <Messages /> },
+      { path: "analytics", element: <SellerAnalytics /> },
       { path: "profile", element: <Profile /> },
       { path: "admin", element: <AdminDashboard /> },
     ],

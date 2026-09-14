@@ -14,10 +14,14 @@ export interface AssistantOrder {
   id: string;
   orderNumber: string;
   status: string;
+  productId?: string;
   productTitle: string;
+  productImage?: string | null;
+  productCategory?: string;
   totalAmount: number;
   pickupOtp?: string | null;
   role: string;
+  counterparty?: string | null;
 }
 
 export interface AssistantWallet {
@@ -33,8 +37,9 @@ export interface AssistantApiResponse {
 }
 
 export const askAssistant = async (
-  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  category?: string
 ): Promise<AssistantApiResponse> => {
-  const response = await Axios.post('/assistant/chat', { messages });
+  const response = await Axios.post('/assistant/chat', { messages, category });
   return (response.data.data || response.data) as AssistantApiResponse;
 };

@@ -228,14 +228,27 @@ export const Messages = () => {
     navigate('/dashboard/messages', { replace: true, state: null });
   };
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = (
+    data: string | { content?: string; mediaType?: 'TEXT' | 'IMAGE' | 'AUDIO'; mediaUrl?: string; audioDuration?: number }
+  ) => {
     if (!selectedUserId) return;
     const socket = getSocket();
-    const payload = {
-      toUserId: selectedUserId,
-      content,
-      productId: productContext?.id,
-    };
+    const payload =
+      typeof data === 'string'
+        ? {
+            toUserId: selectedUserId,
+            content: data,
+            productId: productContext?.id,
+            mediaType: 'TEXT' as const,
+          }
+        : {
+            toUserId: selectedUserId,
+            content: data.content || '',
+            productId: productContext?.id,
+            mediaType: data.mediaType || 'TEXT',
+            mediaUrl: data.mediaUrl,
+            audioDuration: data.audioDuration,
+          };
 
     if (socket) {
       socket.emit(

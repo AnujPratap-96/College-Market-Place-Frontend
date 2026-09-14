@@ -124,8 +124,12 @@ export const createProduct = async (
     };
 
     const imageUrl = data.imageUrl?.trim() || (data.images && data.images[0]?.trim());
-    if (imageUrl) {
+    if (data.images && data.images.length > 0) {
+      payload.images = data.images;
+      payload.imageUrl = data.images[0];
+    } else if (imageUrl) {
       payload.imageUrl = imageUrl;
+      payload.images = [imageUrl];
     }
 
     if (data.frequency) {
@@ -173,6 +177,45 @@ export const createProduct = async (
     return {
       success: false,
       error: getErrorMessage(error, 'Failed to create product'),
+    };
+  }
+};
+
+export const updateProduct = async (
+  id: string,
+  data: Partial<CreateProductInput>
+): Promise<{ product?: IProduct; error?: string; success: boolean }> => {
+  try {
+    const payload: Record<string, any> = {};
+    if (data.title !== undefined) payload.title = data.title.trim();
+    if (data.description !== undefined) payload.description = data.description.trim();
+    if (data.price !== undefined) payload.price = Number(data.price);
+    if (data.type !== undefined) payload.type = data.type;
+    if (data.category !== undefined) payload.category = data.category.trim();
+    if (data.images !== undefined) {
+      payload.images = data.images;
+      if (data.images.length > 0) {
+        payload.imageUrl = data.images[0];
+      }
+    } else if (data.imageUrl !== undefined) {
+      payload.imageUrl = data.imageUrl;
+    }
+    if (data.securityDeposit !== undefined) payload.securityDeposit = Number(data.securityDeposit);
+    if (data.rentalDuration !== undefined) payload.rentalDuration = data.rentalDuration.trim();
+    if (data.serviceDuration !== undefined) payload.serviceDuration = data.serviceDuration.trim();
+    if (data.frequency !== undefined) payload.frequency = data.frequency;
+    if (data.deliverySlots !== undefined) payload.deliverySlots = data.deliverySlots.trim();
+
+    const res = await Axios.put(`/products/${id}`, payload);
+    const raw = res.data?.data?.product || res.data?.product;
+    return {
+      success: true,
+      product: raw ? normalizeProduct(raw) : undefined,
+    };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: getErrorMessage(error, 'Failed to update product'),
     };
   }
 };

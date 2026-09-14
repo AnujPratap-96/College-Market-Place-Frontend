@@ -19,6 +19,9 @@ import {
   Trophy,
   KeyRound,
   CheckCircle2,
+  Star,
+  Pencil,
+  Handshake,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "@/store/store";
 import { loadWallet } from "@/store/walletSlice";
@@ -28,6 +31,7 @@ import { toast } from "@/components/ui/toast";
 import type { IProduct, ProductType } from "@/modules/products/product.types";
 import { BookServiceModal } from "@/modules/orders/components/BookServiceModal";
 import { SubscribeModal } from "@/modules/subscriptions/components/SubscribeModal";
+import { MakeOfferModal } from "@/modules/negotiations/components/MakeOfferModal";
 import { fetchAuctionById } from "@/modules/auctions/auction.api";
 import { AuctionCountdown } from "@/modules/auctions/components/AuctionCountdown";
 import { BidFeed } from "@/modules/auctions/components/BidFeed";
@@ -36,6 +40,8 @@ import type { IAuction, IBid } from "@/modules/auctions/auction.types";
 import { getSocket } from "@/modules/messages/socket.client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { TrustScoreBadge } from "@/modules/reviews/components/TrustScoreBadge";
+import { UserReviewsList } from "@/modules/reviews/components/UserReviewsList";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +58,7 @@ const ProductDetail = () => {
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
+  const [isMakeOfferOpen, setIsMakeOfferOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -484,7 +491,6 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Description Card */}
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/70 p-5 shadow-xs space-y-2.5">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
               Item Details & Overview
@@ -494,7 +500,6 @@ const ProductDetail = () => {
             </p>
           </div>
 
-          {/* Seller Card */}
           <div className="bg-card/80 backdrop-blur-md rounded-2xl border border-border/70 p-5 shadow-xs flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
               <Avatar className="w-12 h-12 border-2 border-orange-500/30">
@@ -504,11 +509,9 @@ const ProductDetail = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="font-bold text-sm text-foreground truncate">{sellerName}</p>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                    Verified Peer
-                  </span>
+                  <TrustScoreBadge size="sm" score={4.8} />
                 </div>
                 <p className="text-xs text-muted-foreground flex items-center gap-1 truncate mt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
@@ -530,7 +533,6 @@ const ProductDetail = () => {
             )}
           </div>
 
-          {/* Campus Escrow Handshake Guarantee Box */}
           <div className="bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent rounded-2xl border border-emerald-500/20 p-4 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -577,23 +579,27 @@ const ProductDetail = () => {
             </div>
           )}
 
-          {/* Action CTAs */}
           <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 pt-2">
             {isOwner ? (
-              <div className="flex flex-col gap-1 w-full">
+              auction?.status === "ENDED" ? (
                 <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
-                  {product.type === "AUCTION"
-                    ? auction?.status === "PENDING"
-                      ? "Awaiting Admin Review"
-                      : "This is your active auction"
-                    : "This is your active listing"}
+                  Auction Finalized (Completed)
                 </Button>
-                {product.type === "AUCTION" && auction?.status === "PENDING" && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
-                    Your auction is awaiting review. It will go live automatically upon approval.
-                  </p>
-                )}
-              </div>
+              ) : (
+                <div className="space-y-2 w-full">
+                  <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer">
+                    <Link to={`/dashboard/products/${product.id}/edit`}>
+                      <Pencil className="w-4 h-4" />
+                      {product.type === "AUCTION" ? "Edit Auction Details (Photos & Info)" : "Edit Listing Details"}
+                    </Link>
+                  </Button>
+                  {product.type === "AUCTION" && auction?.status === "PENDING" && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
+                      Your auction is awaiting review. It will go live automatically upon approval.
+                    </p>
+                  )}
+                </div>
+              )
             ) : product.status === "SOLD" ? (
               <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
                 Listing Sold Out
@@ -660,19 +666,31 @@ const ProductDetail = () => {
                 {actionLoading ? "Processing Deposit..." : "Rent This Item (Escrow Protected)"}
               </Button>
             ) : (
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer"
-                disabled={actionLoading}
-                onClick={() => handleDirectCheckout("SELL")}
-              >
-                {actionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ShoppingBag className="w-4 h-4" />
-                )}
-                {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 flex-1 w-full shadow-md shadow-orange-500/20 cursor-pointer"
+                  disabled={actionLoading}
+                  onClick={() => handleDirectCheckout("SELL")}
+                >
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ShoppingBag className="w-4 h-4" />
+                  )}
+                  {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
+                </Button>
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  className="h-12 rounded-xl gap-2 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/20 font-bold shrink-0 w-full sm:w-auto cursor-pointer"
+                  onClick={() => setIsMakeOfferOpen(true)}
+                >
+                  <Handshake className="w-4 h-4" />
+                  Make Offer
+                </Button>
+              </div>
             )}
 
             <Button variant="outline" size="lg" asChild className="w-full sm:w-auto rounded-xl h-12 shrink-0">
@@ -680,6 +698,19 @@ const ProductDetail = () => {
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="pt-8 border-t border-border/70 space-y-4">
+        <div>
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+            Campus Trust & Peer Reviews
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Verified feedback from campus trades and transactions
+          </p>
+        </div>
+        <UserReviewsList productId={product.id} userId={product.owner?.id || product.seller?.id} />
       </div>
 
       {product && (
@@ -705,6 +736,15 @@ const ProductDetail = () => {
               }}
             />
           )}
+          <MakeOfferModal
+            isOpen={isMakeOfferOpen}
+            onClose={() => setIsMakeOfferOpen(false)}
+            product={product}
+            onOfferCreated={() => {
+              setIsMakeOfferOpen(false);
+              handleMessageSeller();
+            }}
+          />
         </>
       )}
     </div>

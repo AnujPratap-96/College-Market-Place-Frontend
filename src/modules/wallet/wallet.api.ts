@@ -117,3 +117,23 @@ export const verifyPayment = async (payload: {
     return { error: getErrorMessage(error, 'Payment verification failed') }
   }
 }
+
+export const fetchWithdrawals = async (): Promise<{
+  withdrawals?: Array<{
+    id: string;
+    amount: number;
+    upiId: string;
+    status: string;
+    utr?: string;
+    createdAt: string;
+  }>;
+  error?: string;
+}> => {
+  try {
+    const res = await Axios.get('/wallet/withdrawals');
+    const withdrawals = res.data?.data?.withdrawals || res.data?.withdrawals || [];
+    return { withdrawals };
+  } catch (error: unknown) {
+    return { error: getErrorMessage(error, 'Failed to fetch withdrawals') };
+  }
+};
