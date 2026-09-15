@@ -65,11 +65,11 @@ Full multi-step registration and session management:
 
 ---
 
-### 2. Marketplace Browse
+### 2. Marketplace Feed & Instant Search
 
-The main discovery feed at `/dashboard`:
+The primary landing page at `/dashboard` (or `/`).
 
-- **Search** — live-debounced (350ms) full-text search across product titles
+- **Algolia React InstantSearch** — lightning-fast typo-tolerant search using `CustomSearchBox` and `CustomHits`
 - **Category Filter** — Books, Electronics, Stationery, Cycles, Clothing, Furniture, Food, Services, and more
 - **Type Filter Pills** — All Items / For Sale / For Rent / Services / Subscriptions / Live Auctions
 - **Live Auctions Arena Button** — quick-jump to the dedicated auctions page
@@ -291,6 +291,7 @@ Restricted to users with `ADMIN` role at `/dashboard/admin`:
 | **Routing** | React Router DOM v7 |
 | **HTTP Client** | Axios (with base URL and auth token interceptor) |
 | **Real-Time** | Socket.io Client v4 |
+| **Search Engine** | React InstantSearch v7 (Algolia) |
 | **Forms** | React Hook Form v7 |
 | **Theme** | next-themes (dark / light / system) |
 | **Utilities** | clsx, class-variance-authority, tailwind-merge |
@@ -416,6 +417,8 @@ The app is available at `http://localhost:5173`.
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:3000/api` | Backend REST API base URL |
 | `VITE_SOCKET_URL` | `http://localhost:3000` | Socket.io server URL |
+| `VITE_ALGOLIA_APP_ID` | `T4ONVSK779` | Algolia Application ID |
+| `VITE_ALGOLIA_SEARCH_KEY` | `4da26...` | Algolia Public Search-Only API Key |
 
 ---
 

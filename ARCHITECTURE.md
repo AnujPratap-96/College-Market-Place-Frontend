@@ -25,6 +25,7 @@ graph TD
         SocketSingleton["Socket.IO Client Singleton (/modules/messages/socket.client.ts)"]
         ReduxStore["Redux Toolkit Store (/store/store.tsx)"]
         ThemeEngine["Theme Provider (Dark / Light Mode)"]
+        AlgoliaEngine["Algolia React InstantSearch (Global Search)"]
     end
 
     subgraph ReduxSlices["Global State Slices (/src/store)"]
@@ -35,7 +36,7 @@ graph TD
     end
 
     subgraph PageRouters["Route View Controllers (/src/pages)"]
-        HomePage["Home.tsx (Category & Type Filtering)"]
+        HomePage["Home.tsx (Algolia Search UI, Hits, Filtering)"]
         ProductDetailPage["ProductDetail.tsx (Item Overview & Offer CTAs)"]
         CreateListingPage["CreateListing.tsx (Listing Creation)"]
         MessagesPage["Messages.tsx (Split-Pane Chat & Negotiation)"]

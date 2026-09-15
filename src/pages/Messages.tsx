@@ -316,7 +316,7 @@ export const Messages = () => {
   const isTyping = Boolean(selectedUserId && typingUsers[selectedUserId]);
 
   return (
-    <div className="h-[calc(100vh-7rem)] min-h-[550px] rounded-2xl border border-border bg-card shadow-xs overflow-hidden flex">
+    <div className="h-[calc(100dvh-10.5rem)] md:h-[calc(100vh-7rem)] min-h-[400px] md:min-h-[550px] rounded-2xl border border-border bg-card shadow-xs overflow-hidden flex">
       <div
         className={`
           h-full w-full md:w-80 lg:w-96 shrink-0
