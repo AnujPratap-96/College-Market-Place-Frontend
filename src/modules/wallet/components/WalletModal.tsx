@@ -684,7 +684,7 @@ export const WalletModal = ({
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-foreground truncate">
+                          <p className="font-medium text-foreground break-words whitespace-normal">
                             {entry.description || entry.referenceType || 'Wallet Transaction'}
                           </p>
                           <p className="text-[11px] text-muted-foreground">

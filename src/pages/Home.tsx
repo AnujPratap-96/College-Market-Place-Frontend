@@ -1,5 +1,5 @@
-import { useState,  } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -66,6 +66,19 @@ function CustomSearchBox({
   setSearchQuery: (q: string) => void;
 }) {
   const { refine } = useSearchBox();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q && q !== searchQuery) {
+      setSearchQuery(q);
+      refine(q);
+      
+      // Clean up the URL so it doesn't linger
+      searchParams.delete("q");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, refine, setSearchQuery, searchQuery, setSearchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

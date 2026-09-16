@@ -150,6 +150,7 @@ export const createProduct = async (
         description: data.description.trim(),
         category: data.category.trim(),
         imageUrl: data.imageUrl?.trim() || (data.images && data.images[0]?.trim()),
+        images: data.images || [],
         startingBid: data.startingBid || Number(data.price),
         minIncrement: data.minIncrement || 50,
         reservePrice: data.reservePrice,

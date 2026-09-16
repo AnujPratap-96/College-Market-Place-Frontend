@@ -39,10 +39,9 @@ export const AuctionApprovalQueue = () => {
 
   const handleApprove = async (auctionId: string) => {
     setProcessingId(auctionId)
-    const duration = selectedDuration[auctionId] || 24
-    const res = await approveAuction(auctionId, duration)
+    const res = await approveAuction(auctionId)
     if (res.success) {
-      toast.success(`Auction approved and live for ${duration} hours!`)
+      toast.success('Auction approved and live!')
       loadPendingAuctions()
     } else {
       toast.error(res.error || 'Failed to approve auction')
@@ -175,22 +174,10 @@ export const AuctionApprovalQueue = () => {
                 <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0 w-full md:w-56">
                   <div className="flex items-center gap-2 text-xs bg-muted/40 p-2 rounded-lg border border-border">
                     <Clock size={14} className="text-muted-foreground shrink-0" />
-                    <span className="text-muted-foreground text-[11px]">Duration:</span>
-                    <select
-                      value={duration}
-                      onChange={(e) =>
-                        setSelectedDuration({
-                          ...selectedDuration,
-                          [auction.id]: Number(e.target.value),
-                        })
-                      }
-                      className="bg-transparent text-foreground text-xs font-semibold focus:outline-none cursor-pointer"
-                    >
-                      <option value={12}>12 Hours</option>
-                      <option value={24}>24 Hours (1 Day)</option>
-                      <option value={48}>48 Hours (2 Days)</option>
-                      <option value={72}>72 Hours (3 Days)</option>
-                    </select>
+                    <span className="text-muted-foreground text-[11px]">Requested:</span>
+                    <span className="text-foreground text-xs font-semibold">
+                      {Math.round((new Date(auction.endTime).getTime() - new Date(auction.startTime).getTime()) / 3600000)} Hours
+                    </span>
                   </div>
 
                   <Button
