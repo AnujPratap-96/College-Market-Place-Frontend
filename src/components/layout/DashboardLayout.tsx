@@ -1,9 +1,11 @@
 import { Outlet } from "react-router-dom";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import { CampusAIAssistant } from "@/modules/assistant/components/CampusAIAssistant";
 
 const DashboardLayout = () => {
+  usePushNotifications();
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background relative selection:bg-orange-500/20 selection:text-orange-600">
       {/* Ambient background glows for the authenticated dashboard */}

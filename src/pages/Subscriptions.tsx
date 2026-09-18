@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import {
   fetchMySubscriptions,
-  fetchProviderManifest,
+  fetchProviderManifest, syncHolidays, fetchHolidays,
 } from "@/modules/subscriptions/subscription.api";
 import type {
   ISubscription,
@@ -21,6 +21,7 @@ import SubscriptionCard from "@/modules/subscriptions/components/SubscriptionCar
 import VacationModal from "@/modules/subscriptions/components/VacationModal";
 import MissedDeliveryModal from "@/modules/subscriptions/components/MissedDeliveryModal";
 import ProviderManifestTable from "@/modules/subscriptions/components/ProviderManifestTable";
+import InteractiveCalendar from "@/modules/subscriptions/components/InteractiveCalendar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import {
@@ -32,6 +33,8 @@ import {
 
 export const Subscriptions = () => {
   const [activeTab, setActiveTab] = useState<string>("my");
+  const [holidays, setHolidays] = useState<Date[]>([]);
+  const [savingHolidays, setSavingHolidays] = useState(false);
   const [subscriptions, setSubscriptions] = useState<ISubscription[]>([]);
   const [manifest, setManifest] = useState<IProviderManifest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,15 +57,16 @@ export const Subscriptions = () => {
       setLoading(true);
     }
 
-    const [subRes, manifestRes] = await Promise.all([
+    const [subRes, manifestRes, holRes] = await Promise.all([
       fetchMySubscriptions(),
-      fetchProviderManifest(),
+      fetchProviderManifest(), fetchHolidays(),
     ]);
 
     if (subRes.subscriptions) {
       setSubscriptions(subRes.subscriptions);
     }
     if (manifestRes.manifest) {
+    if (holRes.dates) setHolidays(holRes.dates);
       setManifest(manifestRes.manifest);
     }
 
@@ -90,6 +94,19 @@ export const Subscriptions = () => {
     setSelectedSubForMissed(sub);
     setSelectedDeliveryForMissed(delivery);
     setMissedModalOpen(true);
+  };
+
+  
+  const handleSaveHolidays = async (dates: Date[]) => {
+    setSavingHolidays(true);
+    const res = await syncHolidays(dates);
+    if (res.success) {
+      setHolidays(dates);
+      toast.success(`Saved ${dates.length} blackout dates! Deliveries will be skipped.`);
+    } else {
+      toast.error(res.error || 'Failed to save holidays');
+    }
+    setSavingHolidays(false);
   };
 
   return (
@@ -148,7 +165,7 @@ export const Subscriptions = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2 p-1 bg-muted/80 rounded-2xl h-11 border border-border/60">
+        <TabsList className="grid w-full max-w-lg grid-cols-3 p-1 bg-muted/80 rounded-2xl h-11 border border-border/60">
           <TabsTrigger value="my" className="gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs">
             <Repeat className="w-4 h-4" />
             <span>My Plans ({subscriptions.length})</span>
@@ -156,6 +173,10 @@ export const Subscriptions = () => {
           <TabsTrigger value="manifest" className="gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs">
             <Truck className="w-4 h-4" />
             <span>Hostel Manifest</span>
+          </TabsTrigger>
+          <TabsTrigger value="holidays" className="gap-2 rounded-xl text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-xs">
+            <CalendarCheck className="w-4 h-4" />
+            <span>Holidays</span>
           </TabsTrigger>
         </TabsList>
 
@@ -203,6 +224,12 @@ export const Subscriptions = () => {
 
         <TabsContent value="manifest" className="space-y-4 outline-none">
           <ProviderManifestTable manifest={manifest} loading={loading} />
+        </TabsContent>
+
+        <TabsContent value="holidays" className="space-y-4 outline-none">
+          <InteractiveCalendar initialHolidays={holidays} loading={savingHolidays}  
+            onSave={handleSaveHolidays} 
+          />
         </TabsContent>
       </Tabs>
 

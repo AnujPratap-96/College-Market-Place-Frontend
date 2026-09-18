@@ -48,7 +48,7 @@ export const normalizeProduct = (item: any): IProduct => {
     status: item.status || (item.isAvailable === false ? 'SOLD' : 'AVAILABLE'),
     imageUrl: item.imageUrl || images[0] || '',
     images,
-    frequency: item.frequency,
+    deliveryDays: item.deliveryDays,
     deliverySlots: item.deliverySlots,
     serviceDuration: item.serviceDuration,
     securityDeposit: typeof item.securityDeposit === 'number' ? item.securityDeposit : (item.securityDeposit ? Number(item.securityDeposit) : undefined),
@@ -132,8 +132,8 @@ export const createProduct = async (
       payload.images = [imageUrl];
     }
 
-    if (data.frequency) {
-      payload.frequency = data.frequency;
+    if (data.deliveryDays) {
+      payload.deliveryDays = data.deliveryDays;
     }
     if (data.deliverySlots && data.deliverySlots.trim()) {
       payload.deliverySlots = data.deliverySlots.trim();
@@ -204,7 +204,7 @@ export const updateProduct = async (
     if (data.securityDeposit !== undefined) payload.securityDeposit = Number(data.securityDeposit);
     if (data.rentalDuration !== undefined) payload.rentalDuration = data.rentalDuration.trim();
     if (data.serviceDuration !== undefined) payload.serviceDuration = data.serviceDuration.trim();
-    if (data.frequency !== undefined) payload.frequency = data.frequency;
+    if (data.deliveryDays !== undefined) payload.deliveryDays = data.deliveryDays;
     if (data.deliverySlots !== undefined) payload.deliverySlots = data.deliverySlots.trim();
 
     const res = await Axios.put(`/products/${id}`, payload);

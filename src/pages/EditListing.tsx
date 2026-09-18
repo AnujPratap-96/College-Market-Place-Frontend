@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { RootState } from "@/store/store";
 import { fetchProductById, updateProduct } from "@/modules/products/product.api";
-import type { ProductType, SubscriptionFrequency, IProduct } from "@/modules/products/product.types";
+import type { ProductType, IProduct } from "@/modules/products/product.types";
 import { MultiImageUploader } from "@/components/ui/MultiImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +58,7 @@ export const EditListing = () => {
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [rentalDuration, setRentalDuration] = useState("");
   const [serviceDuration, setServiceDuration] = useState("");
-  const [frequency, setFrequency] = useState<SubscriptionFrequency>("MONTHLY");
+  const [deliveryDays, setDeliveryDays] = useState<string[]>([]);
   const [deliverySlots, setDeliverySlots] = useState("");
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export const EditListing = () => {
       if (p.securityDeposit !== undefined) setSecurityDeposit(String(p.securityDeposit));
       if (p.rentalDuration) setRentalDuration(p.rentalDuration);
       if (p.serviceDuration) setServiceDuration(p.serviceDuration);
-      if (p.frequency) setFrequency(p.frequency);
+      if (p.deliveryDays) setDeliveryDays(p.deliveryDays);
       if (p.deliverySlots) setDeliverySlots(p.deliverySlots);
 
       setLoading(false);
@@ -161,7 +161,7 @@ export const EditListing = () => {
       } else if (type === "SERVICE") {
         updatePayload.serviceDuration = serviceDuration.trim() ? serviceDuration.trim() : undefined;
       } else if (type === "SUBSCRIPTION") {
-        updatePayload.frequency = frequency;
+        updatePayload.deliveryDays = deliveryDays;
         updatePayload.deliverySlots = deliverySlots.trim() ? deliverySlots.trim() : undefined;
       }
     }
@@ -393,20 +393,24 @@ export const EditListing = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                    Billing Cycle
+                    Delivery Days
                   </Label>
-                  <Select
-                    value={frequency}
-                    onValueChange={(val) => setFrequency(val as SubscriptionFrequency)}
-                  >
-                    <SelectTrigger className="w-full h-10 rounded-xl bg-card text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="WEEKLY">Weekly Cycle</SelectItem>
-                      <SelectItem value="MONTHLY">Monthly Cycle</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(day => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => setDeliveryDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
+                          deliveryDays.includes(day)
+                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                            : 'bg-background hover:bg-muted text-muted-foreground border-border/70'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="delivery-slots" className="text-xs font-bold text-emerald-700 dark:text-emerald-300">

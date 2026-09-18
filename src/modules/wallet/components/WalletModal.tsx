@@ -669,7 +669,7 @@ export const WalletModal = ({
                       key={entry.id}
                       className="pt-2.5 pb-2 flex items-center justify-between gap-3 text-xs"
                     >
-                      <div className="flex items-start gap-2.5 min-w-0">
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
                         <div
                           className={`mt-0.5 p-1.5 rounded-full shrink-0 ${
                             isPositive
@@ -683,8 +683,8 @@ export const WalletModal = ({
                             <ArrowUpRight className="size-3.5" />
                           )}
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground break-words whitespace-normal">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground break-all whitespace-normal">
                             {entry.description || entry.referenceType || 'Wallet Transaction'}
                           </p>
                           <p className="text-[11px] text-muted-foreground">

@@ -117,3 +117,24 @@ export const cancelSubscription = async (
     return { error: getErrorMessage(error, 'Failed to cancel subscription') };
   }
 };
+
+export const syncHolidays = async (dates: Date[]): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const payload = { dates: dates.map(d => d.toISOString()) };
+    await Axios.post('/holidays/sync', payload);
+    return { success: true };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to sync holidays') };
+  }
+};
+
+export const fetchHolidays = async (): Promise<{ success: boolean; dates?: Date[]; error?: string }> => {
+  try {
+    const res = await Axios.get('/holidays');
+    const records = res.data?.data || [];
+    const dates = records.map((r: any) => new Date(r.startDate));
+    return { success: true, dates };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error, 'Failed to fetch holidays') };
+  }
+};

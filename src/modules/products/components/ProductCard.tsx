@@ -72,7 +72,7 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
       return `₹${price.toLocaleString()} (Fixed)`;
     }
     if (item.type === "SUBSCRIPTION") {
-      const period = item.frequency === "WEEKLY" ? "wk" : "mo";
+      const period = "mo";
       return `₹${price.toLocaleString()}/${period}`;
     }
     return `₹${price.toLocaleString()}`;

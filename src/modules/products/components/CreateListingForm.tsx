@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createProduct } from "../product.api";
-import type { ProductType, SubscriptionFrequency } from "../product.types";
+import type { ProductType } from "../product.types";
 import { toast } from "@/components/ui/toast";
 
 const CATEGORIES = [
@@ -44,7 +44,7 @@ const CreateListingForm = () => {
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [rentalDuration, setRentalDuration] = useState("");
   const [serviceDuration, setServiceDuration] = useState("");
-  const [frequency, setFrequency] = useState<SubscriptionFrequency>("MONTHLY");
+  const [deliveryDays, setDeliveryDays] = useState<string[]>(["MON", "TUE", "WED", "THU", "FRI"]);
   const [deliverySlots, setDeliverySlots] = useState("");
 
   const [minIncrement, setMinIncrement] = useState("50");
@@ -170,7 +170,7 @@ const CreateListingForm = () => {
       securityDeposit: type === "RENT" && securityDeposit ? parseFloat(securityDeposit) : undefined,
       rentalDuration: type === "RENT" && rentalDuration.trim() ? rentalDuration.trim() : undefined,
       serviceDuration: type === "SERVICE" && serviceDuration.trim() ? serviceDuration.trim() : undefined,
-      frequency: type === "SUBSCRIPTION" ? frequency : undefined,
+      deliveryDays: type === "SUBSCRIPTION" ? deliveryDays : undefined,
       deliverySlots: type === "SUBSCRIPTION" && deliverySlots.trim() ? deliverySlots.trim() : undefined,
       startingBid: type === "AUCTION" ? numPrice : undefined,
       minIncrement: type === "AUCTION" && minIncrement ? parseFloat(minIncrement) : undefined,
@@ -426,19 +426,23 @@ const CreateListingForm = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="frequency">Billing Frequency *</Label>
-                  <Select
-                    value={frequency}
-                    onValueChange={(val: SubscriptionFrequency) => setFrequency(val)}
-                  >
-                    <SelectTrigger id="frequency" className="w-full">
-                      <SelectValue placeholder="Select frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="WEEKLY">Weekly</SelectItem>
-                      <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Delivery Days *</Label>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(day => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => setDeliveryDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors cursor-pointer ${
+                          deliveryDays.includes(day)
+                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                            : 'bg-background hover:bg-muted text-muted-foreground border-border/70'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="delivery-slots">Delivery / Serving Slots *</Label>

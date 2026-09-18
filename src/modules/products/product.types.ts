@@ -12,7 +12,7 @@ export interface IProduct {
   status: string;
   imageUrl?: string;
   images?: string[];
-  frequency?: SubscriptionFrequency;
+  deliveryDays?: string[];
   deliverySlots?: string;
   serviceDuration?: string;
   securityDeposit?: number;
@@ -46,7 +46,7 @@ export interface CreateProductInput {
   type: ProductType;
   imageUrl?: string;
   images?: string[];
-  frequency?: SubscriptionFrequency;
+  deliveryDays?: string[];
   deliverySlots?: string;
   serviceDuration?: string;
   securityDeposit?: number;

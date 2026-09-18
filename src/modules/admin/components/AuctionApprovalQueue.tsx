@@ -18,7 +18,7 @@ export const AuctionApprovalQueue = () => {
   const [auctions, setAuctions] = useState<any[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
-  const [selectedDuration, setSelectedDuration] = useState<Record<string, number>>({})
+
   const [rejectReason, setRejectReason] = useState<Record<string, string>>({})
   const [showRejectInput, setShowRejectInput] = useState<Record<string, boolean>>({})
 
@@ -108,7 +108,7 @@ export const AuctionApprovalQueue = () => {
         <div className="grid gap-4">
           {auctions.map((auction) => {
             const isProcessing = processingId === auction.id
-            const duration = selectedDuration[auction.id] || 24
+
             const isRejecting = showRejectInput[auction.id]
 
             return (

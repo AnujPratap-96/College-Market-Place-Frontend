@@ -303,7 +303,7 @@ const ProductDetail = () => {
       );
     }
     if (product.type === "SUBSCRIPTION") {
-      const cycle = product.frequency === "WEEKLY" ? "week" : "month";
+      const cycle = "month";
       return (
         <div className="flex items-baseline gap-1 mt-4">
           <IndianRupee className="w-6 h-6 text-primary self-center" />
@@ -463,7 +463,7 @@ const ProductDetail = () => {
                 <>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                     <Repeat className="w-3.5 h-3.5 shrink-0" />
-                    <span>Frequency: {product.frequency || "MONTHLY"}</span>
+                    <span>Days: {product.deliveryDays?.join(", ")}</span>
                   </div>
                   {product.deliverySlots && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">

@@ -53,7 +53,7 @@ export const SubscribeModal = ({
         productId: product.id,
         deliverySlots: deliverySlots.trim() || undefined,
         autoRenew: Boolean(autoRenew),
-        frequency: product.frequency || "MONTHLY",
+        deliveryDays: product.deliveryDays || [],
       };
 
       const res = await Axios.post("/subscriptions/subscribe", payload);
@@ -84,7 +84,7 @@ export const SubscribeModal = ({
     }
   };
 
-  const frequency = product.frequency || "MONTHLY";
+  const frequency = "MONTHLY";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
