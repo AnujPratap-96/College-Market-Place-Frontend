@@ -29,15 +29,24 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
         )}
 
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-orange-500/95 text-white shadow-xs backdrop-blur-md border border-orange-400/40 animate-pulse">
-            <Gavel className="w-3 h-3" />
-            Live Auction
-          </span>
-          {isExtended && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500 text-white shadow-xs backdrop-blur-md animate-pulse">
-              <Flame className="w-3 h-3 fill-white" />
-              +60s Anti-Sniping
+          {isEnded ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-background/90 text-muted-foreground shadow-xs backdrop-blur-md border border-border/70">
+              <Gavel className="w-3 h-3" />
+              Ended
             </span>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-orange-500/95 text-white shadow-xs backdrop-blur-md border border-orange-400/40 animate-pulse">
+                <Gavel className="w-3 h-3" />
+                Live Auction
+              </span>
+              {isExtended && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500 text-white shadow-xs backdrop-blur-md animate-pulse">
+                  <Flame className="w-3 h-3 fill-white" />
+                  +60s Anti-Sniping
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -98,38 +107,43 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
           )}
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-          <Button
-            asChild
-            className={`min-w-0 gap-1.5 px-3 font-bold h-10 rounded-xl transition-all ${
-              isEnded
-                ? 'bg-muted hover:bg-muted/80 text-foreground'
-                : 'bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-500/20 cursor-pointer'
-            }`}
-          >
-            <Link to={`/dashboard/products/${auction.productId}`} className="min-w-0">
-              <Gavel className="w-4 h-4 shrink-0" />
-              <span className="truncate">
-                {isEnded ? 'View Result' : 'Enter Room'}
-              </span>
-            </Link>
-          </Button>
-          {!isEnded && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                // Trigger fast bid modal from parent page
-                window.dispatchEvent(new CustomEvent('fastBidRequest', {
-                  detail: { auction, amount: auction.currentBid + 50 }
-                }));
-              }}
-              className="inline-flex w-[92px] shrink-0 items-center justify-center gap-1 px-2.5 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+        <div>
+          {isEnded ? (
+            <Button
+              asChild
+              className="w-full gap-1.5 px-3 font-bold h-10 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground border border-border/70 cursor-pointer transition-all"
             >
-              <Zap className="w-4 h-4 shrink-0" />
-              <span>Fast Bid</span>
-            </button>
+              <Link to={`/dashboard/products/${auction.productId}`} className="min-w-0 justify-center">
+                <Gavel className="w-4 h-4 shrink-0" />
+                <span>Ended</span>
+              </Link>
+            </Button>
+          ) : (
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+              <Button
+                asChild
+                className="min-w-0 gap-1.5 px-3 font-bold h-10 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md shadow-orange-500/20 cursor-pointer transition-all"
+              >
+                <Link to={`/dashboard/products/${auction.productId}`} className="min-w-0">
+                  <Gavel className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Enter Room</span>
+                </Link>
+              </Button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.dispatchEvent(new CustomEvent('fastBidRequest', {
+                    detail: { auction, amount: auction.currentBid + 50 }
+                  }));
+                }}
+                className="inline-flex w-[92px] shrink-0 items-center justify-center gap-1 px-2.5 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer transition-all"
+              >
+                <Zap className="w-4 h-4 shrink-0" />
+                <span>Fast Bid</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

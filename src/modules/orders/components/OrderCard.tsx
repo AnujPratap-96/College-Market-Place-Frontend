@@ -531,7 +531,7 @@ export const OrderCard = ({ order, role, onRefresh }: OrderCardProps) => {
                 </>
               )}
 
-              {order.status === "COMPLETED" && (
+              {order.status === "COMPLETED" && role === "buyer" && (
                 <Button
                   type="button"
                   size="sm"

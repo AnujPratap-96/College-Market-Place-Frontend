@@ -215,11 +215,20 @@ const ProductDetail = () => {
             Subscription Plan
           </span>
         );
-      case "AUCTION":
+      case "AUCTION": {
+        const isAuctionEnded =
+          auction?.status === "ENDED" ||
+          (auction?.endTime && new Date(auction.endTime).getTime() <= Date.now());
         return (
           <div className="flex items-center gap-1.5">
-            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-orange-600 text-white shadow-xs">
-              Live Auction
+            <span
+              className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                isAuctionEnded
+                  ? "bg-muted text-muted-foreground border border-border"
+                  : "bg-orange-600 text-white shadow-xs"
+              }`}
+            >
+              {isAuctionEnded ? "Auction Ended" : "Live Auction"}
             </span>
             {auction?.status === "PENDING" && (
               <span className="px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
@@ -228,6 +237,7 @@ const ProductDetail = () => {
             )}
           </div>
         );
+      }
       case "SELL":
       default:
         return (
@@ -579,123 +589,159 @@ const ProductDetail = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-3 pt-2">
+          <div className="pt-2">
             {isOwner ? (
-              auction?.status === "ENDED" ? (
-                <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
-                  Auction Finalized (Completed)
-                </Button>
-              ) : (
-                <div className="space-y-2 w-full">
-                  <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer">
-                    <Link to={`/dashboard/products/${product.id}/edit`}>
-                      <Pencil className="w-4 h-4" />
-                      {product.type === "AUCTION" ? "Edit Auction Details (Photos & Info)" : "Edit Listing Details"}
-                    </Link>
-                  </Button>
-                  {product.type === "AUCTION" && auction?.status === "PENDING" && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
-                      Your auction is awaiting review. It will go live automatically upon approval.
-                    </p>
-                  )}
-                </div>
-              )
-            ) : product.status === "SOLD" ? (
-              <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
-                Listing Sold Out
-              </Button>
-            ) : product.type === "AUCTION" ? (
-              auction?.status === "PENDING" ? (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-xs font-medium w-full">
-                  <Clock className="w-4 h-4 shrink-0" />
-                  <span>⏳ Under Review — Bidding opens once approved by campus moderators.</span>
-                </div>
-              ) : auction?.status === "ENDED" ? (
-                (auction.winnerId === user.id || auction.currentBidderId === user.id) ? (
-                  <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md">
-                    <Link to="/dashboard/orders">
-                      <Trophy className="w-4 h-4" />
-                      You Won! View Pickup Handshake OTP
-                    </Link>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                {auction?.status === "ENDED" ? (
+                  <Button disabled size="lg" className="font-semibold rounded-xl min-h-12 h-auto py-3 flex-1 w-full">
+                    Auction Finalized (Completed)
                   </Button>
                 ) : (
-                  <Button disabled size="lg" className="font-semibold rounded-xl h-12 w-full">
-                    Auction Ended
-                  </Button>
-                )
-              ) : (
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer"
-                  onClick={() => setIsBidModalOpen(true)}
-                >
-                  <Gavel className="w-4 h-4" />
-                  Place Live Bid
-                </Button>
-              )
-            ) : product.type === "SERVICE" ? (
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-purple-500/20 cursor-pointer"
-                onClick={() => setIsServiceModalOpen(true)}
-              >
-                <Sparkles className="w-4 h-4" />
-                Book Campus Gig Now
-              </Button>
-            ) : product.type === "SUBSCRIPTION" ? (
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-emerald-500/20 cursor-pointer"
-                onClick={() => setIsSubscribeModalOpen(true)}
-              >
-                <Repeat className="w-4 h-4" />
-                Subscribe with Vacation Pause
-              </Button>
-            ) : product.type === "RENT" ? (
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold h-12 rounded-xl gap-2 w-full shadow-md shadow-amber-500/20 cursor-pointer"
-                disabled={actionLoading}
-                onClick={() => handleDirectCheckout("RENT")}
-              >
-                {actionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Clock className="w-4 h-4" />
+                  <div className="space-y-2 flex-1 w-full">
+                    <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold min-h-12 h-auto py-3 rounded-xl gap-2 w-full shadow-md shadow-orange-500/20 cursor-pointer">
+                      <Link to={`/dashboard/products/${product.id}/edit`}>
+                        <Pencil className="w-4 h-4 shrink-0" />
+                        {product.type === "AUCTION" ? "Edit Auction Details (Photos & Info)" : "Edit Listing Details"}
+                      </Link>
+                    </Button>
+                    {product.type === "AUCTION" && auction?.status === "PENDING" && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
+                        Your auction is awaiting review. It will go live automatically upon approval.
+                      </p>
+                    )}
+                  </div>
                 )}
-                {actionLoading ? "Processing Deposit..." : "Rent This Item (Escrow Protected)"}
-              </Button>
-            ) : (
-              <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full">
+                <Button variant="outline" size="lg" asChild className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto">
+                  <Link to="/dashboard">Back</Link>
+                </Button>
+              </div>
+            ) : product.status === "SOLD" ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                <Button disabled size="lg" className="font-semibold rounded-xl min-h-12 h-auto py-3 flex-1 w-full">
+                  Listing Sold Out
+                </Button>
+                <Button variant="outline" size="lg" asChild className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto">
+                  <Link to="/dashboard">Back</Link>
+                </Button>
+              </div>
+            ) : product.type === "AUCTION" ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                {auction?.status === "PENDING" ? (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 text-xs font-medium flex-1 w-full">
+                    <Clock className="w-4 h-4 shrink-0" />
+                    <span>⏳ Under Review — Bidding opens once approved by campus moderators.</span>
+                  </div>
+                ) : (auction?.status === "ENDED" || (auction?.endTime && new Date(auction.endTime).getTime() <= Date.now())) ? (
+                  (auction?.winnerId === user.id || auction?.currentBidderId === user.id) ? (
+                    <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold min-h-12 h-auto py-3 rounded-xl gap-2 flex-1 w-full shadow-md">
+                      <Link to="/dashboard/orders">
+                        <Trophy className="w-4 h-4 shrink-0" />
+                        You Won! View Pickup Handshake OTP
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button disabled size="lg" className="font-semibold rounded-xl min-h-12 h-auto py-3 flex-1 w-full">
+                      Auction Ended
+                    </Button>
+                  )
+                ) : (
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold min-h-12 h-auto py-3 rounded-xl gap-2 flex-1 w-full shadow-md shadow-orange-500/20 cursor-pointer"
+                    onClick={() => setIsBidModalOpen(true)}
+                  >
+                    <Gavel className="w-4 h-4 shrink-0" />
+                    Place Live Bid
+                  </Button>
+                )}
+                <Button variant="outline" size="lg" asChild className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto">
+                  <Link to="/dashboard">Back</Link>
+                </Button>
+              </div>
+            ) : product.type === "SERVICE" ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold h-12 rounded-xl gap-2 flex-1 w-full shadow-md shadow-orange-500/20 cursor-pointer"
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold min-h-12 h-auto py-3 rounded-xl gap-2 flex-1 w-full shadow-md shadow-purple-500/20 cursor-pointer"
+                  onClick={() => setIsServiceModalOpen(true)}
+                >
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  Book Campus Gig Now
+                </Button>
+                <Button variant="outline" size="lg" asChild className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto">
+                  <Link to="/dashboard">Back</Link>
+                </Button>
+              </div>
+            ) : product.type === "SUBSCRIPTION" ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold min-h-12 h-auto py-3 rounded-xl gap-2 flex-1 w-full shadow-md shadow-emerald-500/20 cursor-pointer"
+                  onClick={() => setIsSubscribeModalOpen(true)}
+                >
+                  <Repeat className="w-4 h-4 shrink-0" />
+                  Subscribe with Vacation Pause
+                </Button>
+                <Button variant="outline" size="lg" asChild className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto">
+                  <Link to="/dashboard">Back</Link>
+                </Button>
+              </div>
+            ) : product.type === "RENT" ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold min-h-12 h-auto py-3 rounded-xl gap-2 flex-1 w-full shadow-md shadow-amber-500/20 cursor-pointer"
+                  disabled={actionLoading}
+                  onClick={() => handleDirectCheckout("RENT")}
+                >
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  ) : (
+                    <Clock className="w-4 h-4 shrink-0" />
+                  )}
+                  {actionLoading ? "Processing Deposit..." : "Rent This Item (Escrow Protected)"}
+                </Button>
+                <Button variant="outline" size="lg" asChild className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto">
+                  <Link to="/dashboard">Back</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold min-h-12 h-auto py-3 px-4 rounded-xl gap-2 flex-1 w-full shadow-md shadow-orange-500/20 cursor-pointer text-xs sm:text-sm"
                   disabled={actionLoading}
                   onClick={() => handleDirectCheckout("SELL")}
                 >
                   {actionLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                   ) : (
-                    <ShoppingBag className="w-4 h-4" />
+                    <ShoppingBag className="w-4 h-4 shrink-0" />
                   )}
-                  {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
+                  <span>
+                    {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
+                  </span>
                 </Button>
                 <Button
                   type="button"
                   size="lg"
                   variant="outline"
-                  className="h-12 rounded-xl gap-2 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/20 font-bold shrink-0 w-full sm:w-auto cursor-pointer"
+                  className="min-h-12 h-auto py-3 px-4 rounded-xl gap-2 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/20 font-bold shrink-0 w-full sm:w-auto cursor-pointer"
                   onClick={() => setIsMakeOfferOpen(true)}
                 >
-                  <Handshake className="w-4 h-4" />
-                  Make Offer
+                  <Handshake className="w-4 h-4 shrink-0" />
+                  <span>Make Offer</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto"
+                >
+                  <Link to="/dashboard">Back</Link>
                 </Button>
               </div>
             )}
-
-            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto rounded-xl h-12 shrink-0">
-              <Link to="/dashboard">Back</Link>
-            </Button>
           </div>
         </div>
       </div>

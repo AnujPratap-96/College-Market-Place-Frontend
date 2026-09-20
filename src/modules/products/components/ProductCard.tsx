@@ -42,13 +42,27 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
             Subscription
           </span>
         );
-      case "AUCTION":
+      case "AUCTION": {
+        const isAuctionEnded =
+          item.status === "SOLD" ||
+          item.status === "ENDED" ||
+          item.auction?.status === "ENDED" ||
+          (item.auction?.endTime && new Date(item.auction.endTime).getTime() <= Date.now());
+        if (isAuctionEnded) {
+          return (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-muted/95 text-muted-foreground shadow-xs backdrop-blur-md border border-border/70">
+              <Gavel className="w-3 h-3" />
+              Ended
+            </span>
+          );
+        }
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full bg-orange-500/95 text-white shadow-xs backdrop-blur-md border border-orange-400/40 animate-pulse">
             <Gavel className="w-3 h-3" />
             Live Auction
           </span>
         );
+      }
       case "SELL":
       default:
         return (

@@ -154,11 +154,16 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [selectedType, setSelectedType] = useState("ALL");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const handleClearFilters = () => {
     setSearchQuery("");
     setCategory("all");
     setSelectedType("ALL");
+    setMinPrice("");
+    setMaxPrice("");
   };
 
   return (
@@ -169,7 +174,9 @@ const Home = () => {
         filters={
           [
             category !== "all" ? `category:${category}` : "",
-            selectedType !== "ALL" ? `type:${selectedType}` : ""
+            selectedType !== "ALL" ? `type:${selectedType}` : "",
+            minPrice ? `price >= ${minPrice}` : "",
+            maxPrice ? `price <= ${maxPrice}` : "",
           ].filter(Boolean).join(" AND ")
         }
       />
@@ -289,12 +296,86 @@ const Home = () => {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-11 shrink-0 border-border/70 rounded-xl bg-background/50 text-muted-foreground hover:text-foreground"
+                onClick={() => setIsFilterOpen((prev) => !prev)}
+                className={`size-11 shrink-0 rounded-xl transition-all cursor-pointer relative ${
+                  isFilterOpen || minPrice || maxPrice
+                    ? "border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                    : "border-border/70 bg-background/50 text-muted-foreground hover:text-foreground"
+                }`}
+                title="Toggle Advanced Filters"
               >
                 <SlidersHorizontal className="w-4 h-4" />
+                {(minPrice || maxPrice) && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-background" />
+                )}
               </Button>
             </div>
           </div>
+
+          {/* Expandable Advanced Filters Panel */}
+          {isFilterOpen && (
+            <div className="pt-3 border-t border-border/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-muted-foreground uppercase tracking-wider text-[11px]">
+                  Price Range:
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    type="number"
+                    placeholder="Min ₹"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-24 h-8 text-xs rounded-lg bg-background/60 border-border/70"
+                  />
+                  <span className="text-muted-foreground">—</span>
+                  <Input
+                    type="number"
+                    placeholder="Max ₹"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-24 h-8 text-xs rounded-lg bg-background/60 border-border/70"
+                  />
+                </div>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {[
+                    { label: "< ₹500", min: "", max: "500" },
+                    { label: "< ₹1.5k", min: "", max: "1500" },
+                    { label: "₹1.5k - 5k", min: "1500", max: "5000" },
+                    { label: "₹5k+", min: "5000", max: "" },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => {
+                        setMinPrice(preset.min);
+                        setMaxPrice(preset.max);
+                      }}
+                      className={`px-2 py-1 rounded-md text-[11px] font-medium border transition-colors cursor-pointer ${
+                        minPrice === preset.min && maxPrice === preset.max
+                          ? "bg-orange-500 text-white border-orange-500"
+                          : "bg-muted/50 hover:bg-muted text-muted-foreground border-border/60"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {(minPrice || maxPrice) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinPrice("");
+                    setMaxPrice("");
+                  }}
+                  className="text-xs font-semibold text-orange-600 hover:text-orange-500 self-end sm:self-auto cursor-pointer"
+                >
+                  Clear Price Filter
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ALGOLIA HITS */}
