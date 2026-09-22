@@ -35,36 +35,49 @@ export const MultiImageUploader: React.FC<MultiImageUploaderProps> = ({
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
 
-    if (images.length + fileArray.length > maxImages) {
-      toast.error(`You can upload a maximum of ${maxImages} images.`);
+    const availableSlots = maxImages - images.length;
+    if (availableSlots <= 0) {
+      toast.error(`Maximum of ${maxImages} images allowed.`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (fileArray.length > availableSlots) {
+      toast.error(`You can only add ${availableSlots} more ${availableSlots === 1 ? 'image' : 'images'} (max ${maxImages} total).`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     setUploading(true);
     const newUrls: string[] = [];
 
-    for (const file of fileArray) {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image file.`);
-        continue;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds 5MB size limit.`);
-        continue;
-      }
+    try {
+      for (const file of fileArray) {
+        if (images.length + newUrls.length >= maxImages) break;
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not an image file.`);
+          continue;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 5MB size limit.`);
+          continue;
+        }
 
-      const res = await uploadImage(file, folder);
-      if (res.url) {
-        newUrls.push(res.url);
-      } else if (res.error) {
-        toast.error(res.error);
+        const res = await uploadImage(file, folder);
+        if (res.url) {
+          newUrls.push(res.url);
+        } else if (res.error) {
+          toast.error(res.error);
+        }
       }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
 
-    setUploading(false);
-
     if (newUrls.length > 0) {
-      onChange([...images, ...newUrls]);
+      const merged = [...images, ...newUrls].slice(0, maxImages);
+      onChange(merged);
       toast.success(`Added ${newUrls.length} ${newUrls.length === 1 ? 'photo' : 'photos'}!`);
     }
   };
@@ -90,7 +103,8 @@ export const MultiImageUploader: React.FC<MultiImageUploaderProps> = ({
       toast.error(`Maximum of ${maxImages} images allowed.`);
       return;
     }
-    onChange([...images, trimmed]);
+    const next = [...images, trimmed].slice(0, maxImages);
+    onChange(next);
     setManualUrl('');
     setShowUrlInput(false);
     toast.success('Image URL added!');

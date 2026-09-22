@@ -414,16 +414,22 @@ export const EditListing = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="delivery-slots" className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                    Delivery / Availability Slots *
+                    Daily Serving / Delivery Slots (Number per day) *
                   </Label>
                   <Input
                     id="delivery-slots"
-                    placeholder="e.g. Lunch (12:30 PM) & Dinner (8:00 PM)"
+                    type="number"
+                    min="1"
+                    max="10"
+                    placeholder="e.g. 2"
                     value={deliverySlots}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeliverySlots(e.target.value)}
                     className="h-10 rounded-xl bg-card text-xs"
                     required
                   />
+                  <p className="text-[11px] text-muted-foreground">
+                    Number of deliveries/servings per day.
+                  </p>
                 </div>
               </div>
             </div>

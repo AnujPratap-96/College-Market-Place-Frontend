@@ -478,7 +478,7 @@ const ProductDetail = () => {
                   {product.deliverySlots && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       <Calendar className="w-3.5 h-3.5 shrink-0" />
-                      <span>Slots: {product.deliverySlots}</span>
+                      <span>Slots: {isNaN(Number(product.deliverySlots)) ? product.deliverySlots : `${product.deliverySlots} ${Number(product.deliverySlots) === 1 ? 'Slot/Day' : 'Slots/Day'}`}</span>
                     </div>
                   )}
                 </>
@@ -706,39 +706,41 @@ const ProductDetail = () => {
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+              <div className="flex flex-col gap-2.5 w-full">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold min-h-12 h-auto py-3 px-4 rounded-xl gap-2 flex-1 w-full shadow-md shadow-orange-500/20 cursor-pointer text-xs sm:text-sm"
+                    disabled={actionLoading}
+                    onClick={() => handleDirectCheckout("SELL")}
+                  >
+                    {actionLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                    ) : (
+                      <ShoppingBag className="w-4 h-4 shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="outline"
+                    className="min-h-12 h-auto py-3 px-5 rounded-xl gap-2 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/20 font-bold shrink-0 w-full sm:w-auto cursor-pointer"
+                    onClick={() => setIsMakeOfferOpen(true)}
+                  >
+                    <Handshake className="w-4 h-4 shrink-0" />
+                    <span>Make Offer</span>
+                  </Button>
+                </div>
                 <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold min-h-12 h-auto py-3 px-4 rounded-xl gap-2 flex-1 w-full shadow-md shadow-orange-500/20 cursor-pointer text-xs sm:text-sm"
-                  disabled={actionLoading}
-                  onClick={() => handleDirectCheckout("SELL")}
-                >
-                  {actionLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                  ) : (
-                    <ShoppingBag className="w-4 h-4 shrink-0" />
-                  )}
-                  <span>
-                    {actionLoading ? "Locking Escrow..." : "Buy Now with Escrow Protection"}
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  size="lg"
                   variant="outline"
-                  className="min-h-12 h-auto py-3 px-4 rounded-xl gap-2 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50/20 font-bold shrink-0 w-full sm:w-auto cursor-pointer"
-                  onClick={() => setIsMakeOfferOpen(true)}
-                >
-                  <Handshake className="w-4 h-4 shrink-0" />
-                  <span>Make Offer</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
+                  size="sm"
                   asChild
-                  className="min-h-12 h-auto py-3 px-5 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold shrink-0 w-full sm:w-auto"
+                  className="min-h-10 h-auto py-2 px-4 rounded-xl border-border/70 text-muted-foreground hover:text-foreground font-semibold w-full sm:w-auto self-start"
                 >
-                  <Link to="/dashboard">Back</Link>
+                  <Link to="/dashboard">Back to Marketplace</Link>
                 </Button>
               </div>
             )}

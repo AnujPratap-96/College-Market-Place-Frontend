@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Gavel, Trophy, User, Flame, Zap } from 'lucide-react';
+import { Gavel, Trophy, User, Flame, Zap, Clock } from 'lucide-react';
 import type { IAuction } from '../auction.types';
 import { AuctionCountdown } from './AuctionCountdown';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,31 @@ interface AuctionCardProps {
 export const AuctionCard = ({ auction }: AuctionCardProps) => {
   const bidsCount = auction.bids?.length ?? auction._count?.bids ?? 0;
   const isExtended = auction.status === 'EXTENDED';
-  const isEnded = auction.status === 'ENDED' || new Date(auction.endTime).getTime() <= Date.now();
+
+  const checkEnded = () => {
+    if (auction.status === 'ENDED' || auction.status === 'CANCELLED') return true;
+    if (!auction.endTime) return false;
+    const endMs = new Date(auction.endTime).getTime();
+    return !isNaN(endMs) && endMs <= Date.now();
+  };
+
+  const [isEnded, setIsEnded] = useState(checkEnded);
+
+  useEffect(() => {
+    const ended = checkEnded();
+    setIsEnded(ended);
+    if (ended) return;
+
+    const remainingMs = new Date(auction.endTime).getTime() - Date.now();
+    if (remainingMs > 0) {
+      const timer = setTimeout(() => {
+        setIsEnded(true);
+      }, remainingMs);
+      return () => clearTimeout(timer);
+    } else {
+      setIsEnded(true);
+    }
+  }, [auction.endTime, auction.status]);
 
   return (
     <div className="group rounded-2xl border border-border/70 bg-card/85 backdrop-blur-md overflow-hidden hover:border-orange-500/40 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 flex flex-col">
@@ -51,13 +76,21 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
         </div>
 
         <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
-          <div className="backdrop-blur-md bg-background/90 rounded-full px-2.5 py-1 shadow-xs border border-border/60">
-            <AuctionCountdown
-              endTime={auction.endTime}
-              isExtended={isExtended}
-              compact
-            />
-          </div>
+          {!isEnded ? (
+            <div className="backdrop-blur-md bg-background/90 rounded-full px-2.5 py-1 shadow-xs border border-border/60">
+              <AuctionCountdown
+                endTime={auction.endTime}
+                isExtended={isExtended}
+                onExpire={() => setIsEnded(true)}
+                compact
+              />
+            </div>
+          ) : (
+            <div className="backdrop-blur-md bg-background/90 text-muted-foreground text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs border border-border/60 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span>Closed</span>
+            </div>
+          )}
 
           <div className="backdrop-blur-md bg-background/90 text-foreground text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs border border-border/60">
             {bidsCount} {bidsCount === 1 ? 'bid' : 'bids'}

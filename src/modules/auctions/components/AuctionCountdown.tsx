@@ -70,6 +70,13 @@ export const AuctionCountdown = ({
   }, [endTime]);
 
   if (timeLeft.isEnded) {
+    if (compact) {
+      return (
+        <span className="font-mono text-xs text-muted-foreground font-semibold">
+          Auction Ended
+        </span>
+      );
+    }
     return (
       <Badge variant="secondary" className="bg-muted text-muted-foreground font-mono">
         Auction Ended

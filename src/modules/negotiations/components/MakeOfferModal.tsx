@@ -65,8 +65,8 @@ export const MakeOfferModal: React.FC<MakeOfferModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md w-[95%] sm:w-full rounded-2xl p-6 bg-card border-border overflow-hidden">
+        <DialogHeader className="space-y-1 text-left">
           <DialogTitle className="flex items-center gap-2 text-base font-semibold">
             <Handshake className="w-5 h-5 text-emerald-500" />
             Make a Negotiation Offer

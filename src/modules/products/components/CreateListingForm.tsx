@@ -84,7 +84,7 @@ const CreateListingForm = () => {
         throw new Error("Image upload failed.");
       }
 
-      setImages((prev) => (prev.includes(uploadedUrl) ? prev : [uploadedUrl, ...prev]));
+      setImages((prev) => (prev.includes(uploadedUrl) ? prev : [uploadedUrl, ...prev].slice(0, 6)));
 
       const estimateRes = await Axios.post("/products/ai-estimate-listing", {
         imageUrl: uploadedUrl,
@@ -444,15 +444,21 @@ const CreateListingForm = () => {
                     ))}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="delivery-slots">Delivery / Serving Slots *</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="delivery-slots">Daily Serving / Delivery Slots (Number per day) *</Label>
                   <Input
                     id="delivery-slots"
-                    placeholder='e.g., Lunch (12:30 PM) & Dinner (8:00 PM)'
+                    type="number"
+                    min="1"
+                    max="10"
+                    placeholder="e.g. 2 (servings / deliveries per day)"
                     value={deliverySlots}
                     onChange={(e) => setDeliverySlots(e.target.value)}
                     required
                   />
+                  <p className="text-[11px] text-muted-foreground">
+                    Number of deliveries/servings per day (e.g., 1 for single meal, 2 for lunch & dinner, 3 for breakfast, lunch & dinner).
+                  </p>
                 </div>
               </div>
             </div>

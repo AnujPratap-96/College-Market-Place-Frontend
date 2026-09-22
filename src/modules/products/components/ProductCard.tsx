@@ -196,7 +196,9 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
                 {item.deliverySlots && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                     <Calendar className="w-3 h-3 shrink-0" />
-                    <span className="truncate max-w-[140px]">{item.deliverySlots}</span>
+                    <span className="truncate max-w-[140px]">
+                      {isNaN(Number(item.deliverySlots)) ? item.deliverySlots : `${item.deliverySlots} ${Number(item.deliverySlots) === 1 ? 'Slot/Day' : 'Slots/Day'}`}
+                    </span>
                   </span>
                 )}
                 {item.type === "RENT" && typeof item.securityDeposit === "number" && (
