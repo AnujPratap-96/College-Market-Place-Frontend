@@ -161,8 +161,10 @@ export const CategoryShowcase = () => {
                   <div>
                     <div className="relative aspect-16/10 overflow-hidden bg-muted">
                       <img
-                        src={item.imageUrl || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80"}
+                        src={item.imageUrl ? item.imageUrl.replace(/w=\d+/, "w=400") : "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&auto=format&fit=crop&q=75"}
                         alt={item.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-3 left-3 flex gap-2">
@@ -173,7 +175,7 @@ export const CategoryShowcase = () => {
                               : item.type === "SERVICE"
                               ? "bg-purple-600 text-white"
                               : item.type === "SUBSCRIPTION"
-                              ? "bg-emerald-600 text-white"
+                              ? "bg-emerald-700 text-white"
                               : "bg-blue-600 text-white"
                           }`}
                         >
@@ -237,7 +239,7 @@ export const CategoryShowcase = () => {
 
                       <Button
                         size="sm"
-                        className="bg-orange-500/10 hover:bg-orange-500 text-orange-600 hover:text-white font-semibold transition-all cursor-pointer"
+                        className="bg-orange-500/10 hover:bg-orange-600 text-orange-700 dark:text-orange-400 hover:text-white font-bold transition-all cursor-pointer"
                         asChild
                       >
                         <Link to="/auth/signup">View Details</Link>
@@ -255,7 +257,7 @@ export const CategoryShowcase = () => {
       <div className="text-center mt-12">
         <Button
           size="lg"
-          className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 shadow-md shadow-orange-500/20 gap-2 cursor-pointer"
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-8 shadow-md shadow-orange-600/20 gap-2 cursor-pointer"
           asChild
         >
           <Link to="/auth/signup">

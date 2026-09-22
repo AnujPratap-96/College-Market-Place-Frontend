@@ -8,13 +8,11 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken") ||
+  const flowToken =
     localStorage.getItem("signupToken") ||
     localStorage.getItem("resetToken");
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (flowToken && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${flowToken}`;
   }
   return config;
 });

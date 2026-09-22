@@ -27,8 +27,10 @@ const useFetchUser = () => {
         photoUrl: user.profileImage || user.image || "",
       }));
       return true;
-    } catch (error) {
-      console.error("Failed to fetch user:", error);
+    } catch (error: any) {
+      if (error?.response?.status !== 401) {
+        console.error("Failed to fetch user:", error);
+      }
       return false;
     }
   }, [dispatch]);

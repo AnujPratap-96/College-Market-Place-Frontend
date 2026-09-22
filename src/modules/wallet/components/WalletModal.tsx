@@ -37,6 +37,7 @@ import {
 } from '../wallet.api'
 import type { ILedgerEntry, LedgerType } from '../wallet.types'
 import { toast } from '@/components/ui/toast'
+import { loadRazorpay } from '@/utils/loadRazorpay'
 
 interface WalletModalProps {
   open: boolean
@@ -127,6 +128,9 @@ export const WalletModal = ({
       toast.error(orderData.error || 'Razorpay payment is unavailable.')
       return
     }
+
+    await loadRazorpay()
+
     if (
       orderData.keyId &&
       !orderData.keyId.includes('placeholder') &&

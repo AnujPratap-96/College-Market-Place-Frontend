@@ -60,10 +60,6 @@ const SignupForm = () => {
       );
       if (response.status === 200 || response.status === 201 || response.data?.success) {
         localStorage.removeItem("signupToken");
-        const authToken = response.data?.data?.token || response.data?.token;
-        if (authToken) {
-          localStorage.setItem("authToken", authToken);
-        }
         toast.success("Account created successfully! Welcome to CollegeMart.");
         navigate("/auth/thank-you");
       }

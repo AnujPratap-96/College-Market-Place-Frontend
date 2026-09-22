@@ -9,15 +9,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.user);
   const { fetchUser } = useFetchUser();
   const location = useLocation();
-  const token =
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken");
 
-  const [loading, setLoading] = useState(!user.isLoggedIn && Boolean(token));
+  const [loading, setLoading] = useState(!user.isLoggedIn);
 
   useEffect(() => {
     let isMounted = true;
-    if (!user.isLoggedIn && token) {
+    if (!user.isLoggedIn) {
       fetchUser()
         .catch(() => {})
         .finally(() => {
@@ -29,7 +26,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return () => {
       isMounted = false;
     };
-  }, [user.isLoggedIn, token, fetchUser]);
+  }, [user.isLoggedIn, fetchUser]);
 
   if (loading) {
     return (

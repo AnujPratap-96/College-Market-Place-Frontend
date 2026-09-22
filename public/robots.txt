@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /auth/
+
+Sitemap: https://college-market-place-frontend.vercel.app/sitemap.xml

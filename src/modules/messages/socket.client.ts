@@ -7,11 +7,6 @@ export const getSocket = (): Socket | null => {
     return socket;
   }
 
-  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-  if (!token) {
-    return null;
-  }
-
   const targetUrl =
     import.meta.env.VITE_SOCKET_URL ||
     (import.meta.env.VITE_API_BASE_URL
@@ -23,7 +18,7 @@ export const getSocket = (): Socket | null => {
   }
 
   socket = io(targetUrl, {
-    auth: { token },
+    withCredentials: true,
     transports: ['websocket', 'polling'],
     autoConnect: true,
   });

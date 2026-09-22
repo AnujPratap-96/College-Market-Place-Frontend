@@ -1,0 +1,14 @@
+# College Marketplace
+
+> Campus peer-to-peer commerce and escrow marketplace for verified college students.
+
+## Features
+- Verified college student authentication with college email
+- Realtime Live Auctions for campus move-out clearance
+- Peer-to-peer Escrow protection with 6-digit OTP verification
+- Meal plan and tiffin subscription services with pause support
+
+## Links
+- [Home](https://college-market-place-frontend.vercel.app/)
+- [Marketplace](https://college-market-place-frontend.vercel.app/dashboard/products)
+- [Auctions](https://college-market-place-frontend.vercel.app/dashboard/auctions)

@@ -172,8 +172,9 @@ const HeroSection = () => {
               <div className="rounded-xl border border-border/70 bg-background/60 p-3.5 flex flex-col justify-between space-y-3 hover:border-orange-500/40 transition-colors">
                 <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-muted">
                   <img
-                    src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80"
+                    src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=450&auto=format&fit=crop&q=75"
                     alt="Textbooks & Notes"
+                    loading="eager"
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold">
@@ -190,9 +191,9 @@ const HeroSection = () => {
                       <ShieldCheck className="w-3 h-3" /> Escrow
                     </span>
                   </div>
-                  <h4 className="font-bold text-sm text-foreground line-clamp-1">
+                  <p className="font-bold text-sm text-foreground line-clamp-1">
                     Algorithm Design + Cormen CLRS (4th Edition)
-                  </h4>
+                  </p>
                   <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-border/50">
                     <div>
                       <span className="text-xs text-muted-foreground">Price: </span>
@@ -211,8 +212,9 @@ const HeroSection = () => {
                 </div>
                 <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-muted mt-1">
                   <img
-                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80"
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=450&auto=format&fit=crop&q=75"
                     alt="Audio Gear"
+                    loading="eager"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2.5 py-1 rounded-md bg-black/80 text-white text-[11px] font-mono font-bold backdrop-blur-xs">
@@ -232,9 +234,9 @@ const HeroSection = () => {
                       7 Bids
                     </Badge>
                   </div>
-                  <h4 className="font-bold text-sm text-foreground line-clamp-1">
+                  <p className="font-bold text-sm text-foreground line-clamp-1">
                     Sony Noise Canceling Headphones + Case
-                  </h4>
+                  </p>
                   <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-muted-foreground block">Leading Bid</span>
@@ -251,8 +253,9 @@ const HeroSection = () => {
               <div className="rounded-xl border border-border/70 bg-background/60 p-3.5 flex flex-col justify-between space-y-3 hover:border-orange-500/40 transition-colors">
                 <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-muted">
                   <img
-                    src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80"
+                    src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=450&auto=format&fit=crop&q=75"
                     alt="Campus Tutoring & Gigs"
+                    loading="eager"
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold">
@@ -269,9 +272,9 @@ const HeroSection = () => {
                       Per Session
                     </span>
                   </div>
-                  <h4 className="font-bold text-sm text-foreground line-clamp-1">
+                  <p className="font-bold text-sm text-foreground line-clamp-1">
                     Python & DSA Coding Exam Mentorship
-                  </h4>
+                  </p>
                   <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-border/50">
                     <div>
                       <span className="text-xs text-muted-foreground">Fee: </span>

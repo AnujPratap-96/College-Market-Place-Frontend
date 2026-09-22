@@ -1,30 +1,50 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
-import Auth from "@/pages/auth";
-import LoginForm from "@/components/auth/LoginForm";
-import VerifyEmail from "@/components/auth/VerifyEmail";
-import Home from "@/pages/Home";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import Layout from "@/pages/layout";
-import OtpInput from "@/components/auth/OtpInput";
 import LandingPage from "@/pages/LandingPage";
-import SignupForm from "@/components/auth/SignUp";
-import ThankYou from "@/components/auth/Thankyou";
-import Products from "@/pages/Products.tsx";
-import Orders from "@/pages/Orders.tsx";
-import Profile from "@/pages/Profile.tsx";
-import ProductDetail from "@/pages/ProductDetail";
-import CreateListing from "@/pages/CreateListing";
-import ProtectedRoute from "@/components/ProtectedRoute.tsx";
-import ForgotPassword from "@/components/auth/ForgotPassword";
-import ResetOtp from "@/components/auth/ResetOtp";
-import ResetPassword from "@/components/auth/ResetPassword";
-import Subscriptions from "@/pages/Subscriptions";
-import Messages from "@/pages/Messages";
-import Auctions from "@/pages/Auctions";
-import AdminDashboard from "@/pages/AdminDashboard";
-import WantedBoard from "@/pages/WantedBoard";
-import EditListing from "@/pages/EditListing";
-import SellerAnalytics from "@/pages/SellerAnalytics";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+const PageLoader = () => (
+  <div className="flex h-[50vh] min-h-[300px] w-full items-center justify-center">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-8 w-8 animate-spin rounded-full border-3 border-orange-500 border-t-transparent" />
+      <span className="text-xs font-medium text-muted-foreground">Loading...</span>
+    </div>
+  </div>
+);
+
+const Lazy = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
+  <Suspense fallback={<PageLoader />}>
+    <Component />
+  </Suspense>
+);
+
+// Auth routes (lazy)
+const Auth = lazy(() => import("@/pages/auth"));
+const LoginForm = lazy(() => import("@/components/auth/LoginForm"));
+const VerifyEmail = lazy(() => import("@/components/auth/VerifyEmail"));
+const OtpInput = lazy(() => import("@/components/auth/OtpInput"));
+const SignupForm = lazy(() => import("@/components/auth/SignUp"));
+const ThankYou = lazy(() => import("@/components/auth/Thankyou"));
+const ForgotPassword = lazy(() => import("@/components/auth/ForgotPassword"));
+const ResetOtp = lazy(() => import("@/components/auth/ResetOtp"));
+const ResetPassword = lazy(() => import("@/components/auth/ResetPassword"));
+
+// Dashboard routes (lazy)
+const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout"));
+const Home = lazy(() => import("@/pages/Home"));
+const Products = lazy(() => import("@/pages/Products"));
+const CreateListing = lazy(() => import("@/pages/CreateListing"));
+const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
+const EditListing = lazy(() => import("@/pages/EditListing"));
+const Orders = lazy(() => import("@/pages/Orders"));
+const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
+const WantedBoard = lazy(() => import("@/pages/WantedBoard"));
+const Auctions = lazy(() => import("@/pages/Auctions"));
+const Messages = lazy(() => import("@/pages/Messages"));
+const SellerAnalytics = lazy(() => import("@/pages/SellerAnalytics"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 
 const router = createBrowserRouter([
   {
@@ -34,16 +54,16 @@ const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       {
         path: "auth",
-        element: <Auth />,
+        element: Lazy(Auth),
         children: [
-          { path: "login", element: <LoginForm /> },
-          { path: "signup", element: <VerifyEmail /> },
-          { path: "verify-otp", element: <OtpInput /> },
-          { path: "complete-signup", element: <SignupForm /> },
-          { path: "thank-you", element: <ThankYou /> },
-          { path: "forgot-password", element: <ForgotPassword /> },
-          { path: "reset-otp", element: <ResetOtp /> },
-          { path: "reset-password", element: <ResetPassword /> },
+          { path: "login", element: Lazy(LoginForm) },
+          { path: "signup", element: Lazy(VerifyEmail) },
+          { path: "verify-otp", element: Lazy(OtpInput) },
+          { path: "complete-signup", element: Lazy(SignupForm) },
+          { path: "thank-you", element: Lazy(ThankYou) },
+          { path: "forgot-password", element: Lazy(ForgotPassword) },
+          { path: "reset-otp", element: Lazy(ResetOtp) },
+          { path: "reset-password", element: Lazy(ResetPassword) },
         ],
       },
     ],
@@ -52,23 +72,23 @@ const router = createBrowserRouter([
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <DashboardLayout />
+        {Lazy(DashboardLayout)}
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <Home /> },
-      { path: "products", element: <Products /> },
-      { path: "products/create", element: <CreateListing /> },
-      { path: "products/:id", element: <ProductDetail /> },
-      { path: "products/:id/edit", element: <EditListing /> },
-      { path: "orders", element: <Orders /> },
-      { path: "subscriptions", element: <Subscriptions /> },
-      { path: "wanted", element: <WantedBoard /> },
-      { path: "auctions", element: <Auctions /> },
-      { path: "messages", element: <Messages /> },
-      { path: "analytics", element: <SellerAnalytics /> },
-      { path: "profile", element: <Profile /> },
-      { path: "admin", element: <AdminDashboard /> },
+      { index: true, element: Lazy(Home) },
+      { path: "products", element: Lazy(Products) },
+      { path: "products/create", element: Lazy(CreateListing) },
+      { path: "products/:id", element: Lazy(ProductDetail) },
+      { path: "products/:id/edit", element: Lazy(EditListing) },
+      { path: "orders", element: Lazy(Orders) },
+      { path: "subscriptions", element: Lazy(Subscriptions) },
+      { path: "wanted", element: Lazy(WantedBoard) },
+      { path: "auctions", element: Lazy(Auctions) },
+      { path: "messages", element: Lazy(Messages) },
+      { path: "analytics", element: Lazy(SellerAnalytics) },
+      { path: "profile", element: Lazy(Profile) },
+      { path: "admin", element: Lazy(AdminDashboard) },
     ],
   },
 ]);

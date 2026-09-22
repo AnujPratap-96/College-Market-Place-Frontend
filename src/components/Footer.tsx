@@ -29,9 +29,9 @@ const FooterSection = () => {
 
           {/* Col 2: Marketplace */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Marketplace
-            </h4>
+            </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link to="/auth/signup" className="hover:text-foreground transition-colors">
@@ -64,9 +64,9 @@ const FooterSection = () => {
 
           {/* Col 3: Campus Trust & Safety */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Safety & Trust
-            </h4>
+            </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#safety" className="hover:text-foreground transition-colors">
@@ -98,9 +98,9 @@ const FooterSection = () => {
 
           {/* Col 4: Campus Life */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Student Life
-            </h4>
+            </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link to="/auth/signup" className="hover:text-foreground transition-colors">

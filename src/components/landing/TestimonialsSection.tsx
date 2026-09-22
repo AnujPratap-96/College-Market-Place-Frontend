@@ -8,7 +8,7 @@ const TESTIMONIALS = [
     name: "Aayush Sharma",
     role: "B.Tech Computer Science '25",
     college: "IIT Delhi",
-    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80",
+    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop&crop=faces&auto=format&q=80",
     quote:
       "When vacating Hostel 5, I had a 50L fridge and a study table to sell within 24 hours. Put them on CollegeMart's Live Auction and got ₹6,200 total by evening. The buyer came to my room with the OTP and the funds hit my wallet immediately.",
     tag: "Senior Move-Out Auction",
@@ -17,7 +17,7 @@ const TESTIMONIALS = [
     name: "Sneha Patel",
     role: "Electronics & Comm '26",
     college: "BITS Pilani",
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80",
+    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces&auto=format&q=80",
     quote:
       "I used to dread buying engineering semester books because seniors on WhatsApp would ask for direct UPI prepayment before showing the book. With CollegeMart, my money was locked safely in escrow until I inspected the pages at the Library lawn.",
     tag: "Escrow Handshake",
@@ -26,7 +26,7 @@ const TESTIMONIALS = [
     name: "Rohan Nair",
     role: "Mechanical Engineering '26",
     college: "NIT Trichy",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces&auto=format&q=80",
     quote:
       "The vacation pause on the hostel meal subscription is a lifesaver. Whenever I go home for study leave or semester breaks, I pause my daily tiffin with one click and don't lose a single rupee. No mess contractor ever allowed that before.",
     tag: "Hostel Meal Subscription",
