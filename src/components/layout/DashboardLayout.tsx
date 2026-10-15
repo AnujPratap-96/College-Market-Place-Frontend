@@ -4,6 +4,7 @@ import { ArrowUp } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 const CampusAIAssistant = lazy(() =>
   import("@/modules/assistant/components/CampusAIAssistant").then((m) => ({
@@ -43,7 +44,12 @@ const DashboardLayout = () => {
         <Sidebar />
         <main ref={mainRef} className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto pb-16">
-            <Outlet />
+            <ErrorBoundary
+              fallbackTitle="Section Temporarily Unavailable"
+              fallbackSubtitle="This dashboard section encountered an unexpected error. You can retry or navigate to another campus feature using the sidebar."
+            >
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import Layout from "@/pages/layout";
 import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 
 const PageLoader = () => (
   <div className="flex h-[50vh] min-h-[300px] w-full items-center justify-center">
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <LandingPage /> },
       {
@@ -75,6 +77,7 @@ const router = createBrowserRouter([
         {Lazy(DashboardLayout)}
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: Lazy(Home) },
       { path: "products", element: Lazy(Products) },
@@ -90,6 +93,10 @@ const router = createBrowserRouter([
       { path: "profile", element: Lazy(Profile) },
       { path: "admin", element: Lazy(AdminDashboard) },
     ],
+  },
+  {
+    path: "*",
+    element: <RouteErrorBoundary />,
   },
 ]);
 
