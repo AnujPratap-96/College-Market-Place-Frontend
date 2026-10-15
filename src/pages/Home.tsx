@@ -90,6 +90,7 @@ function CustomSearchBox({
       <Input
         type="text"
         placeholder="Search by title, category, description..."
+        aria-label="Search listings by title, category, or description"
         value={searchQuery}
         onChange={(e) => {
           setSearchQuery(e.target.value);
@@ -100,6 +101,7 @@ function CustomSearchBox({
       {searchQuery && (
         <button
           type="button"
+          aria-label="Clear search input"
           onClick={() => {
             setSearchQuery("");
             refine("");
@@ -115,6 +117,25 @@ function CustomSearchBox({
 
 function CustomHits({ onClear }: { onClear?: () => void }) {
   const { hits, results } = useHits();
+
+  if (!results) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5 mt-6">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-72 rounded-2xl bg-card/40 border border-border/50 animate-pulse flex flex-col overflow-hidden"
+          >
+            <div className="h-44 bg-muted/60" />
+            <div className="p-4 space-y-2.5 flex-1">
+              <div className="h-4 w-3/4 bg-muted/60 rounded" />
+              <div className="h-3 w-1/2 bg-muted/50 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (results && results.nbHits === 0) {
     return (
@@ -293,7 +314,7 @@ const Home = () => {
 
             <div className="flex items-center gap-3 shrink-0">
               <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-full sm:w-[150px] h-11 bg-background/50 border-border/70 rounded-xl text-xs sm:text-sm">
+                <SelectTrigger aria-label="Filter listings by type" className="w-full sm:w-[150px] h-11 bg-background/50 border-border/70 rounded-xl text-xs sm:text-sm">
                   <SelectValue placeholder="Listing Type" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border/70">
@@ -309,6 +330,7 @@ const Home = () => {
                 type="button"
                 variant="outline"
                 size="icon"
+                aria-label="Toggle Advanced Filters"
                 onClick={() => setIsFilterOpen((prev) => !prev)}
                 className={`size-11 shrink-0 rounded-xl transition-all cursor-pointer relative ${
                   isFilterOpen || minPrice || maxPrice

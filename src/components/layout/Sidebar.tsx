@@ -219,7 +219,10 @@ const Sidebar = () => {
             className="flex items-center gap-3 w-full p-2 rounded-xl border border-border/60 bg-background/45 hover:bg-muted/70 transition-colors group"
           >
             <Avatar className="w-9 h-9 border border-border">
-              <AvatarImage src={user.photoUrl} />
+              <AvatarImage
+                src={user.photoUrl}
+                alt={user.name ? `${user.name}'s profile avatar` : "User profile avatar"}
+              />
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                 {user.name ? user.name.trim().charAt(0).toUpperCase() : "U"}
               </AvatarFallback>

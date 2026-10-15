@@ -161,6 +161,8 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
           <img
             src={displayImage}
             alt={item.title}
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE;
             }}
@@ -176,7 +178,7 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
               <h3 className="font-bold text-base text-foreground line-clamp-1 group-hover:text-orange-500 transition-colors">
                 {item.title}
               </h3>
-              <div className="font-extrabold text-orange-600 dark:text-orange-400 shrink-0 text-sm whitespace-nowrap">
+              <div className="font-extrabold text-orange-700 dark:text-orange-400 shrink-0 text-sm whitespace-nowrap">
                 {getFormattedPrice()}
               </div>
             </div>
@@ -215,7 +217,7 @@ const ProductCard = ({ product, post, onDelete, action }: ProductCardProps) => {
               <MapPin className="w-3.5 h-3.5 text-orange-500 shrink-0" />
               <span className="truncate font-medium">{college || "Campus Circle"}</span>
             </div>
-            <div className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">
+            <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Escrow</span>
             </div>
