@@ -40,7 +40,7 @@ const searchClient = algoliasearch(
 
 const CATEGORIES = [
   { value: "all", label: "All Items", icon: Sparkles },
-  { value: "textbooks", label: "Books & Notes", icon: BookOpen },
+  { value: "books", label: "Books & Notes", icon: BookOpen },
   { value: "electronics", label: "Electronics & Tech", icon: Laptop },
   { value: "cycles", label: "Cycles & Mobility", icon: Bike },
   { value: "furniture", label: "Furniture & Coolers", icon: Armchair },
@@ -113,7 +113,7 @@ function CustomSearchBox({
   );
 }
 
-function CustomHits() {
+function CustomHits({ onClear }: { onClear?: () => void }) {
   const { hits, results } = useHits();
 
   if (results && results.nbHits === 0) {
@@ -124,9 +124,16 @@ function CustomHits() {
           No items found
         </h3>
         <p className="text-sm text-muted-foreground">
-          We couldn't find anything matching your search.
+          We couldn't find anything matching your search or filters.
         </p>
-        <Button variant="outline" className="mt-6 rounded-xl border-border/70" onClick={() => window.location.reload()}>
+        <Button
+          variant="outline"
+          className="mt-6 rounded-xl border-border/70 cursor-pointer"
+          onClick={() => {
+            if (onClear) onClear();
+            else window.location.reload();
+          }}
+        >
           Clear Filters
         </Button>
       </div>
@@ -164,6 +171,8 @@ const Home = () => {
     setSelectedType("ALL");
     setMinPrice("");
     setMaxPrice("");
+    const event = new Event('reset-search');
+    document.dispatchEvent(event);
   };
 
   return (
@@ -173,7 +182,11 @@ const Home = () => {
       <Configure 
         filters={
           [
-            category !== "all" ? `category:${category}` : "",
+            category !== "all"
+              ? (category === "books"
+                  ? "(category:books OR category:BOOKS OR category:textbooks)"
+                  : `(category:${category} OR category:${category.toUpperCase()})`)
+              : "",
             selectedType !== "ALL" ? `type:${selectedType}` : "",
             minPrice ? `price >= ${minPrice}` : "",
             maxPrice ? `price <= ${maxPrice}` : "",
@@ -379,7 +392,7 @@ const Home = () => {
         </div>
 
         {/* ALGOLIA HITS */}
-        <CustomHits />
+        <CustomHits onClear={handleClearFilters} />
 
       </div>
     </InstantSearch>
