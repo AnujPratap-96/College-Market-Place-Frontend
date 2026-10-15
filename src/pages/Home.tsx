@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -15,7 +15,8 @@ import {
   Zap,
   Package,
   X,
-  
+  Loader2,
+  ArrowUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ import {
 } from "@/components/ui/select";
 
 import { liteClient as algoliasearch } from 'algoliasearch/lite';
-import { InstantSearch, useHits, useSearchBox, Configure,  } from 'react-instantsearch';
+import { InstantSearch, useInfiniteHits, useInstantSearch, useSearchBox, Configure } from 'react-instantsearch';
 
 const searchClient = algoliasearch(
   import.meta.env.VITE_ALGOLIA_APP_ID,
@@ -115,7 +116,27 @@ function CustomSearchBox({
 }
 
 function CustomHits({ onClear }: { onClear?: () => void }) {
-  const { hits, results } = useHits();
+  const { hits, isLastPage, showMore, results } = useInfiniteHits();
+  const { status } = useInstantSearch();
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
+  isFetchingRef.current = status === "loading" || status === "stalled";
+
+  useEffect(() => {
+    if (!sentinelRef.current || isLastPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLastPage && !isFetchingRef.current) {
+          showMore();
+        }
+      },
+      { rootMargin: "350px" }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [isLastPage, showMore]);
 
   if (!results) {
     return (
@@ -168,12 +189,49 @@ function CustomHits({ onClear }: { onClear?: () => void }) {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5 mt-6">
-      {hits.map((hit: any) => (
-        <div key={hit.objectID} className="h-full">
-          <ProductCard product={hit as IProduct} />
-        </div>
-      ))}
+    <div className="space-y-8 mt-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+        {hits.map((hit: any) => (
+          <div key={hit.objectID} className="h-full">
+            <ProductCard product={hit as IProduct} />
+          </div>
+        ))}
+      </div>
+
+      {/* Infinite Scroll Sentinel and Status */}
+      <div ref={sentinelRef} className="py-6 flex flex-col items-center justify-center">
+        {!isLastPage ? (
+          <div className="flex flex-col items-center gap-3">
+            <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground bg-card/70 border border-border/60 px-4 py-2 rounded-full shadow-xs">
+              <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+              <span>Loading more campus listings...</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => showMore()}
+              disabled={isFetchingRef.current}
+              className="text-xs rounded-xl border-border/70 hover:border-orange-500/50 hover:text-orange-500 cursor-pointer"
+            >
+              Load More Manually
+            </Button>
+          </div>
+        ) : hits.length > 0 ? (
+          <div className="flex flex-col items-center gap-2 text-center text-muted-foreground pt-4 border-t border-border/40 w-full max-w-md mx-auto">
+            <p className="text-xs sm:text-sm font-medium text-foreground">
+              🎉 You've seen all {results?.nbHits ?? hits.length} listings!
+            </p>
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="inline-flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 hover:underline cursor-pointer font-medium"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+              Back to top
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -202,6 +260,7 @@ const Home = () => {
       
       {/* Configure Algolia Filters based on React State */}
       <Configure 
+        hitsPerPage={24}
         filters={
           [
             category !== "all"
