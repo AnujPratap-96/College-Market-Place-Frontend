@@ -83,6 +83,7 @@ const Header = () => {
               ref={searchInputRef}
               type="text"
               placeholder="Search books, cycles, gigs, meal plans..."
+              aria-label="Search campus listings"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 pr-9 h-10 rounded-xl bg-muted/50 border-border/70 focus-visible:ring-orange-500 text-xs sm:text-sm"
@@ -95,6 +96,7 @@ const Header = () => {
             {search && (
               <button
                 type="button"
+                aria-label="Clear search input"
                 onClick={() => setSearch("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
               >

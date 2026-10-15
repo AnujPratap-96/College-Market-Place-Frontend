@@ -1,8 +1,14 @@
+import { lazy, Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
-import { CampusAIAssistant } from "@/modules/assistant/components/CampusAIAssistant";
+
+const CampusAIAssistant = lazy(() =>
+  import("@/modules/assistant/components/CampusAIAssistant").then((m) => ({
+    default: m.CampusAIAssistant,
+  }))
+);
 
 const DashboardLayout = () => {
   usePushNotifications();
@@ -21,7 +27,9 @@ const DashboardLayout = () => {
           </div>
         </main>
       </div>
-      <CampusAIAssistant />
+      <Suspense fallback={null}>
+        <CampusAIAssistant />
+      </Suspense>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Search,
   Plus,
@@ -124,12 +123,19 @@ function CustomHits({ onClear }: { onClear?: () => void }) {
         {Array.from({ length: 10 }).map((_, i) => (
           <div
             key={i}
-            className="h-72 rounded-2xl bg-card/40 border border-border/50 animate-pulse flex flex-col overflow-hidden"
+            className="h-[360px] rounded-2xl bg-card/60 border border-border/70 animate-pulse flex flex-col overflow-hidden"
           >
-            <div className="h-44 bg-muted/60" />
-            <div className="p-4 space-y-2.5 flex-1">
-              <div className="h-4 w-3/4 bg-muted/60 rounded" />
-              <div className="h-3 w-1/2 bg-muted/50 rounded" />
+            <div className="h-48 bg-muted/60" />
+            <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="h-4 w-3/4 bg-muted/70 rounded" />
+                <div className="h-3 w-1/2 bg-muted/50 rounded" />
+                <div className="h-2.5 w-full bg-muted/40 rounded mt-2" />
+              </div>
+              <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                <div className="h-3 w-16 bg-muted/40 rounded" />
+                <div className="h-3 w-12 bg-muted/40 rounded" />
+              </div>
             </div>
           </div>
         ))}
@@ -164,14 +170,9 @@ function CustomHits({ onClear }: { onClear?: () => void }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-5 mt-6">
       {hits.map((hit: any) => (
-        <motion.div
-          key={hit.objectID}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="h-full"
-        >
+        <div key={hit.objectID} className="h-full">
           <ProductCard product={hit as IProduct} />
-        </motion.div>
+        </div>
       ))}
     </div>
   );
