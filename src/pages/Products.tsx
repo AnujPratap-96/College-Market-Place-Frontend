@@ -7,6 +7,7 @@ import ProductCard from "@/modules/products/components/ProductCard";
 import { fetchProducts, fetchMyProducts, deleteProduct } from "@/modules/products/product.api";
 import type { IProduct } from "@/modules/products/product.types";
 import { toast } from "@/components/ui/toast";
+import { scrollToTop } from "@/utils/scroll";
 
 const PAGE_LIMIT = 12;
 
@@ -226,7 +227,7 @@ const Products = () => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  onClick={() => scrollToTop()}
                   className="inline-flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 hover:underline cursor-pointer font-medium"
                 >
                   <ArrowUp className="w-3.5 h-3.5" />

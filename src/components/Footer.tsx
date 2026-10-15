@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, ArrowUpRight } from "lucide-react";
+import { GraduationCap, ArrowUpRight, ArrowUp } from "lucide-react";
+import { scrollToTop } from "@/utils/scroll";
 
 const FooterSection = () => {
   return (
@@ -132,7 +133,7 @@ const FooterSection = () => {
             &copy; {new Date().getFullYear()} CollegeMart. Built for students, by students.
           </p>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-6">
             <Link to="/auth/signup" className="hover:text-foreground transition-colors">
               Privacy Policy
             </Link>
@@ -142,6 +143,15 @@ const FooterSection = () => {
             <Link to="/auth/signup" className="hover:text-foreground transition-colors">
               Campus Security
             </Link>
+            <button
+              type="button"
+              onClick={() => scrollToTop()}
+              className="hover:text-foreground transition-colors inline-flex items-center gap-1.5 cursor-pointer font-medium text-orange-600 dark:text-orange-400"
+              aria-label="Scroll back to top"
+            >
+              <span>Back to top</span>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>

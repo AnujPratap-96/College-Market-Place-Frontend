@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProductCard from "@/modules/products/components/ProductCard";
 import type { IProduct } from "@/modules/products/product.types";
+import { scrollToTop } from "@/utils/scroll";
 import {
   Select,
   SelectContent,
@@ -237,7 +238,7 @@ function CustomHits({ onClear }: { onClear?: () => void }) {
             </p>
             <button
               type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              onClick={() => scrollToTop()}
               className="inline-flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 hover:underline cursor-pointer font-medium"
             >
               <ArrowUp className="w-3.5 h-3.5" />
