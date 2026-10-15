@@ -40,16 +40,7 @@ export const fetchMessages = async (
   otherUserId: string
 ): Promise<{ messages?: IMessage[]; error?: string }> => {
   try {
-    let res;
-    try {
-      res = await Axios.get(`/messages/${otherUserId}`);
-    } catch (err: unknown) {
-      if (isAxiosError(err) && err.response?.status === 404) {
-        res = await Axios.get(`/messages/conversation/${otherUserId}`);
-      } else {
-        throw err;
-      }
-    }
+    const res = await Axios.get(`/messages/conversation/${otherUserId}`);
     const messages = res.data?.data?.messages || res.data?.messages || [];
     return { messages };
   } catch (error: unknown) {

@@ -352,9 +352,12 @@ export const ChatWindow = ({
       {productContext && <ProductContextBanner product={productContext} />}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {loading && messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        {loading ? (
+          <div className="h-full flex flex-col justify-end p-4 space-y-3 animate-pulse">
+            <div className="h-10 w-48 bg-muted/60 rounded-2xl rounded-bl-none self-start" />
+            <div className="h-12 w-64 bg-primary/20 rounded-2xl rounded-br-none self-end" />
+            <div className="h-8 w-40 bg-muted/60 rounded-2xl rounded-bl-none self-start" />
+            <div className="h-10 w-52 bg-primary/20 rounded-2xl rounded-br-none self-end" />
           </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground">

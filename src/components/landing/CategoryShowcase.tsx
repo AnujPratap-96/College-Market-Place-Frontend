@@ -204,10 +204,10 @@ export const CategoryShowcase = () => {
 
                     <div className="p-5 space-y-2.5">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="font-semibold text-orange-600 dark:text-orange-400">
+                        <span className="font-semibold text-orange-700 dark:text-orange-400">
                           {sellerCollege}
                         </span>
-                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
                           <ShieldCheck className="w-3.5 h-3.5" /> Escrow Protected
                         </span>
                       </div>

@@ -185,6 +185,7 @@ export const Messages = () => {
     }
 
     dispatch(setActiveUserId(selectedUserId));
+    dispatch(setActiveMessages([]));
     if (!requestedProductId) setProductContext(null);
     let isMounted = true;
     setMessagesLoading(true);

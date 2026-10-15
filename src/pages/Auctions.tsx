@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Gavel, Plus, Search, Filter, Loader2, Sparkles, Flame } from 'lucide-react';
+import { Gavel, Plus, Search, Filter, Sparkles, Flame } from 'lucide-react';
 import { fetchAuctions } from '@/modules/auctions/auction.api';
 import type { IAuction } from '@/modules/auctions/auction.types';
 import { AuctionCard } from '@/modules/auctions/components/AuctionCard';
@@ -132,6 +132,7 @@ const Auctions = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search auctions (cooler, cycle, book)..."
+              aria-label="Search auctions by title or category"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-10 rounded-xl bg-background/50 border-border/70 text-xs focus-visible:ring-orange-500"
@@ -139,7 +140,7 @@ const Auctions = () => {
           </form>
 
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[140px] text-xs h-10 rounded-xl bg-background/50 border-border/70">
+            <SelectTrigger aria-label="Filter auctions by category" className="w-[140px] text-xs h-10 rounded-xl bg-background/50 border-border/70">
               <Filter className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -156,9 +157,20 @@ const Auctions = () => {
 
       {/* Grid Content */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-          <span className="text-xs text-muted-foreground font-semibold">Connecting to live campus auction arena...</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/70 bg-card/60 p-4 space-y-4 animate-pulse">
+              <div className="aspect-4/3 rounded-xl bg-muted/60" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted/70 rounded w-3/4" />
+                <div className="h-3 bg-muted/50 rounded w-1/2" />
+              </div>
+              <div className="pt-2 border-t border-border/40 flex justify-between items-center">
+                <div className="h-4 bg-muted/50 rounded w-20" />
+                <div className="h-8 bg-muted/60 rounded w-24" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : auctions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-6 bg-card/75 backdrop-blur-md rounded-3xl border border-border/70 text-center max-w-md mx-auto space-y-4">

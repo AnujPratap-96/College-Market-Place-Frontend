@@ -173,8 +173,9 @@ const HeroSection = () => {
                 <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-muted">
                   <img
                     src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=450&auto=format&fit=crop&q=75"
-                    alt="Textbooks & Notes"
-                    loading="eager"
+                    alt="Algorithm Design & CLRS textbook"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold">
@@ -187,7 +188,7 @@ const HeroSection = () => {
                 <div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                     <span>Hostel 4 • CS Branch</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" /> Escrow
                     </span>
                   </div>
@@ -199,7 +200,7 @@ const HeroSection = () => {
                       <span className="text-xs text-muted-foreground">Price: </span>
                       <span className="text-base font-extrabold text-foreground font-mono">₹650</span>
                     </div>
-                    <span className="text-[11px] text-orange-500 font-semibold">Instant Handshake</span>
+                    <span className="text-[11px] text-orange-600 dark:text-orange-400 font-semibold">Instant Handshake</span>
                   </div>
                 </div>
               </div>
@@ -213,8 +214,9 @@ const HeroSection = () => {
                 <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-muted mt-1">
                   <img
                     src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=450&auto=format&fit=crop&q=75"
-                    alt="Audio Gear"
-                    loading="eager"
+                    alt="Sony Noise Canceling Headphones"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2.5 py-1 rounded-md bg-black/80 text-white text-[11px] font-mono font-bold backdrop-blur-xs">
@@ -240,7 +242,7 @@ const HeroSection = () => {
                   <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-muted-foreground block">Leading Bid</span>
-                      <span className="text-base font-extrabold text-orange-500 font-mono">₹4,200</span>
+                      <span className="text-base font-extrabold text-orange-600 dark:text-orange-400 font-mono">₹4,200</span>
                     </div>
                     <Button size="sm" className="h-7 text-xs bg-orange-500 hover:bg-orange-600 text-white font-bold gap-1 px-2.5">
                       <Gavel className="w-3 h-3" /> Bid +₹100
@@ -254,8 +256,9 @@ const HeroSection = () => {
                 <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-muted">
                   <img
                     src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=450&auto=format&fit=crop&q=75"
-                    alt="Campus Tutoring & Gigs"
-                    loading="eager"
+                    alt="Campus Tutoring & Gigs Mentorship"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold">

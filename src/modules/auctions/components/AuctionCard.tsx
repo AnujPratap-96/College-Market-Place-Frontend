@@ -45,6 +45,8 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
           <img
             src={auction.product.imageUrl}
             alt={auction.product.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (

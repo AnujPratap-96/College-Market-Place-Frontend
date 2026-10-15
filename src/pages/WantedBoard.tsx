@@ -6,7 +6,6 @@ import {
   Search,
   Filter,
   RefreshCw,
-  Loader2,
   Inbox,
   Send,
   Sparkles,
@@ -158,6 +157,7 @@ export const WantedBoard: React.FC = () => {
               />
               <Input
                 placeholder="Search requests (e.g. calculator, lab coat, cycle, textbook)..."
+                aria-label="Search wanted requests by item name or description"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-10 pl-10 rounded-xl bg-card border-border/70 text-xs"
@@ -186,9 +186,20 @@ export const WantedBoard: React.FC = () => {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
-          <Loader2 size={32} className="animate-spin text-primary" />
-          <p className="text-xs font-semibold">Loading campus wanted board...</p>
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/70 bg-card/60 p-5 space-y-3 animate-pulse">
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-muted/70 rounded w-1/3" />
+                <div className="h-4 bg-muted/50 rounded w-20" />
+              </div>
+              <div className="h-3 bg-muted/50 rounded w-3/4" />
+              <div className="pt-2 border-t border-border/40 flex justify-between items-center">
+                <div className="h-3 bg-muted/40 rounded w-28" />
+                <div className="h-8 bg-muted/60 rounded w-24" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : activeTab === 'ALL' ? (
         requests.length === 0 ? (

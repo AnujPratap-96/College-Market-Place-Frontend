@@ -107,6 +107,7 @@ const Header = () => {
             <Input
               type="text"
               placeholder="Search campus gear, books, cycles, tutoring..."
+              aria-label="Search campus marketplace"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-4 pr-10 h-10 rounded-full border-border/80 focus-visible:ring-orange-500 bg-muted/40"
@@ -115,7 +116,8 @@ const Header = () => {
               type="submit"
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2 text-orange-500 hover:text-orange-600 rounded-full"
+              aria-label="Submit search"
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-orange-500 hover:text-orange-600 rounded-full cursor-pointer"
             >
               <AiOutlineSearch size={18} />
             </Button>
