@@ -61,11 +61,21 @@ export const normalizeProduct = (item: any): IProduct => {
   };
 };
 
+export interface IProductPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 export const fetchProducts = async (filters?: {
   category?: string;
   query?: string;
   type?: string;
-}): Promise<{ products: IProduct[]; error?: string }> => {
+  page?: number;
+  limit?: number;
+}): Promise<{ products: IProduct[]; pagination?: IProductPagination; error?: string }> => {
   try {
     const params = new URLSearchParams();
     const hasQuery = Boolean(filters?.query && filters.query.trim());
@@ -86,11 +96,19 @@ export const fetchProducts = async (filters?: {
       }
     }
 
+    if (filters?.page) {
+      params.append('page', String(filters.page));
+    }
+    if (filters?.limit) {
+      params.append('limit', String(filters.limit));
+    }
+
     const url = params.toString() ? `${endpoint}?${params.toString()}` : endpoint;
     const res = await Axios.get(url);
     const rawList = res.data?.data?.products || res.data?.products || (Array.isArray(res.data) ? res.data : []);
+    const pagination = res.data?.data?.pagination || res.data?.pagination;
     const products = rawList.map(normalizeProduct);
-    return { products };
+    return { products, pagination };
   } catch (error: unknown) {
     return { products: [], error: getErrorMessage(error, 'Failed to fetch products') };
   }
@@ -235,11 +253,20 @@ export const deleteProduct = async (
   }
 };
 
-export const fetchMyProducts = async (): Promise<{ products: IProduct[]; error?: string }> => {
+export const fetchMyProducts = async (options?: {
+  page?: number;
+  limit?: number;
+}): Promise<{ products: IProduct[]; pagination?: IProductPagination; error?: string }> => {
   try {
-    const res = await Axios.get('/products/my-products');
+    const params = new URLSearchParams();
+    if (options?.page) params.append('page', String(options.page));
+    if (options?.limit) params.append('limit', String(options.limit));
+    const url = params.toString() ? `/products/my-products?${params.toString()}` : '/products/my-products';
+
+    const res = await Axios.get(url);
     const rawList = res.data?.data?.products || res.data?.products || (Array.isArray(res.data) ? res.data : []);
-    return { products: rawList.map(normalizeProduct) };
+    const pagination = res.data?.data?.pagination || res.data?.pagination;
+    return { products: rawList.map(normalizeProduct), pagination };
   } catch (error: unknown) {
     return { products: [], error: getErrorMessage(error, 'Failed to fetch your listings') };
   }

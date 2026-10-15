@@ -1,33 +1,86 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Package, Sparkles } from "lucide-react";
+import { Plus, Package, Sparkles, Loader2, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/modules/products/components/ProductCard";
 import { fetchProducts, fetchMyProducts, deleteProduct } from "@/modules/products/product.api";
 import type { IProduct } from "@/modules/products/product.types";
 import { toast } from "@/components/ui/toast";
 
+const PAGE_LIMIT = 12;
+
 const Products = () => {
   const [posts, setPosts] = useState<IProduct[]>([]);
   const [viewMode, setViewMode] = useState<"mine" | "all">("mine");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
 
-  const loadPosts = useCallback(async () => {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingMoreRef = useRef(false);
+  loadingMoreRef.current = loadingMore;
+
+  const loadInitialPosts = useCallback(async (mode: "mine" | "all") => {
     setLoading(true);
-    const result = viewMode === "mine" ? await fetchMyProducts() : await fetchProducts();
+    setPage(1);
+    const result = mode === "mine" 
+      ? await fetchMyProducts({ page: 1, limit: PAGE_LIMIT }) 
+      : await fetchProducts({ page: 1, limit: PAGE_LIMIT });
+
     if (result.error) {
       toast.error(result.error);
       setPosts([]);
+      setHasMore(false);
+      setTotal(0);
     } else {
       setPosts(result.products || []);
+      setHasMore(result.pagination?.hasMore ?? false);
+      setTotal(result.pagination?.total ?? (result.products?.length || 0));
     }
     setLoading(false);
-  }, [viewMode]);
+  }, []);
 
   useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+    loadInitialPosts(viewMode);
+  }, [viewMode, loadInitialPosts]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    const result = viewMode === "mine"
+      ? await fetchMyProducts({ page: nextPage, limit: PAGE_LIMIT })
+      : await fetchProducts({ page: nextPage, limit: PAGE_LIMIT });
+
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      setPosts((prev) => [...prev, ...(result.products || [])]);
+      setPage(nextPage);
+      setHasMore(result.pagination?.hasMore ?? false);
+      if (result.pagination?.total) setTotal(result.pagination.total);
+    }
+    setLoadingMore(false);
+  }, [viewMode, page, hasMore]);
+
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMoreRef.current) {
+          loadMore();
+        }
+      },
+      { rootMargin: "350px" }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadMore]);
 
   const handleDelete = async (postId: string) => {
     if (!confirm("Are you sure you want to delete this listing?")) return;
@@ -35,6 +88,7 @@ const Products = () => {
     if (result.success) {
       toast.success("Listing deleted successfully!");
       setPosts((prev) => prev.filter((p) => p.id !== postId));
+      setTotal((prev) => Math.max(0, prev - 1));
     } else {
       toast.error(result.error || "Failed to delete listing");
     }
@@ -69,7 +123,7 @@ const Products = () => {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              My Listings ({viewMode === "mine" ? posts.length : "..."})
+              My Listings ({viewMode === "mine" ? total : "..."})
             </button>
             <button
               type="button"
@@ -80,7 +134,7 @@ const Products = () => {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              All Campus Listings
+              All Campus Listings ({viewMode === "all" ? total : "..."})
             </button>
           </div>
 
@@ -98,7 +152,7 @@ const Products = () => {
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(8)].map((_, i) => (
             <div key={i} className="bg-card/70 rounded-2xl overflow-hidden border border-border/60">
               <div className="h-48 bg-muted animate-pulse" />
               <div className="p-4 space-y-3">
@@ -130,20 +184,57 @@ const Products = () => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {posts.map((post, index) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(index * 0.04, 0.3) }}
-            >
-              <ProductCard
-                product={post}
-                onDelete={viewMode === "mine" ? handleDelete : undefined}
-              />
-            </motion.div>
-          ))}
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {posts.map((post, index) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min((index % PAGE_LIMIT) * 0.04, 0.25) }}
+              >
+                <ProductCard
+                  product={post}
+                  onDelete={viewMode === "mine" ? handleDelete : undefined}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Infinite Scroll Sentinel and Status */}
+          <div ref={sentinelRef} className="py-6 flex flex-col items-center justify-center">
+            {hasMore ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground bg-card/70 border border-border/60 px-4 py-2 rounded-full shadow-xs">
+                  <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                  <span>Loading more listings...</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="text-xs rounded-xl border-border/70 hover:border-orange-500/50 hover:text-orange-500 cursor-pointer"
+                >
+                  {loadingMore ? "Loading..." : "Load More Manually"}
+                </Button>
+              </div>
+            ) : posts.length > 0 ? (
+              <div className="flex flex-col items-center gap-2 text-center text-muted-foreground pt-4 border-t border-border/40 w-full max-w-md mx-auto">
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  🎉 Showing all {posts.length} {viewMode === "mine" ? "of your listings" : "campus offerings"}!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  className="inline-flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 hover:underline cursor-pointer font-medium"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                  Back to top
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

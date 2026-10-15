@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 
 import { liteClient as algoliasearch } from 'algoliasearch/lite';
-import { InstantSearch, useInfiniteHits, useInstantSearch, useSearchBox, Configure } from 'react-instantsearch';
+import { InstantSearch, useInfiniteHits, useInstantSearch, useSearchBox, usePagination, Configure } from 'react-instantsearch';
 
 const searchClient = algoliasearch(
   import.meta.env.VITE_ALGOLIA_APP_ID,
@@ -115,6 +115,20 @@ function CustomSearchBox({
   );
 }
 
+function FilterPageResetter({ filterKey }: { filterKey: string }) {
+  const { refine: setPage } = usePagination();
+  const prevKeyRef = useRef(filterKey);
+
+  useEffect(() => {
+    if (prevKeyRef.current !== filterKey) {
+      prevKeyRef.current = filterKey;
+      setPage(0);
+    }
+  }, [filterKey, setPage]);
+
+  return null;
+}
+
 function CustomHits({ onClear }: { onClear?: () => void }) {
   const { hits, isLastPage, showMore, results } = useInfiniteHits();
   const { status } = useInstantSearch();
@@ -164,7 +178,7 @@ function CustomHits({ onClear }: { onClear?: () => void }) {
     );
   }
 
-  if (results && results.nbHits === 0) {
+  if (results && (results.nbHits === 0 || hits.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center bg-card/50 backdrop-blur-md rounded-2xl border border-dashed border-border/70 mt-6">
         <Package className="w-12 h-12 text-muted-foreground/50 mb-4 stroke-[1.5]" />
@@ -274,6 +288,9 @@ const Home = () => {
           ].filter(Boolean).join(" AND ")
         }
       />
+
+      {/* Automatically reset page to 0 whenever filters change */}
+      <FilterPageResetter filterKey={`${category}-${selectedType}-${minPrice}-${maxPrice}`} />
 
       <div className="space-y-8">
         {/* Dynamic Campus Announcement Hero Banner */}
@@ -474,7 +491,7 @@ const Home = () => {
         </div>
 
         {/* ALGOLIA HITS */}
-        <CustomHits onClear={handleClearFilters} />
+        <CustomHits key={`${category}-${selectedType}-${minPrice}-${maxPrice}`} onClear={handleClearFilters} />
 
       </div>
     </InstantSearch>
