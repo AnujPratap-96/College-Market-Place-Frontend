@@ -94,7 +94,7 @@ const ProductDetail = () => {
     const socket = getSocket();
     if (!socket) return;
 
-    socket.emit("join_auction", { auctionId: auction.id });
+    socket.emit("join_auction", auction.id);
 
     const handleNewBid = (data: {
       auctionId: string;
@@ -144,7 +144,7 @@ const ProductDetail = () => {
     socket.on("auction_ended", handleAuctionEnded);
 
     return () => {
-      socket.emit("leave_auction", { auctionId: auction.id });
+      socket.emit("leave_auction", auction.id);
       socket.off("new_bid", handleNewBid);
       socket.off("auction_ended", handleAuctionEnded);
     };
