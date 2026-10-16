@@ -32,6 +32,9 @@ export const PlaceBidModal = ({
 }: PlaceBidModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const wallet = useSelector((state: RootState) => state.wallet);
+  const user = useSelector((state: RootState) => state.user);
+
+  const isAlreadyLeading = Boolean(user && auction.currentBidderId === user.id);
 
   const hasBids = (auction.bids && auction.bids.length > 0) || (auction._count?.bids ?? 0) > 0;
   const minRequiredBid = hasBids
@@ -49,6 +52,11 @@ export const PlaceBidModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAlreadyLeading) {
+      toast.error('You are already the leading bidder for this auction.');
+      return;
+    }
+
     if (amount < minRequiredBid) {
       toast.error(`Minimum bid required is ₹${minRequiredBid.toFixed(2)}`);
       return;
@@ -154,12 +162,21 @@ export const PlaceBidModal = ({
             </span>
           </div>
 
-          <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[11px] flex items-start gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <span>
-              Your bid is protected in escrow. If another student outbids you, this entire amount is immediately refunded back to your available balance.
-            </span>
-          </div>
+          {isAlreadyLeading ? (
+            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <span>
+                You currently hold the highest bid on this auction. Bidding against yourself is disabled.
+              </span>
+            </div>
+          ) : (
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-[11px] flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                Your bid is protected in escrow. If another student outbids you, this entire amount is immediately refunded back to your available balance.
+              </span>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-2">
             <Button
@@ -173,7 +190,7 @@ export const PlaceBidModal = ({
             </Button>
             <Button
               type="submit"
-              disabled={loading || !isBalanceSufficient || amount < minRequiredBid}
+              disabled={loading || isAlreadyLeading || !isBalanceSufficient || amount < minRequiredBid}
               className="flex-1 gap-1.5"
             >
               {loading ? (
@@ -181,6 +198,8 @@ export const PlaceBidModal = ({
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Placing Bid...
                 </>
+              ) : isAlreadyLeading ? (
+                <>Highest Bidder</>
               ) : (
                 <>
                   <Gavel className="w-4 h-4" />

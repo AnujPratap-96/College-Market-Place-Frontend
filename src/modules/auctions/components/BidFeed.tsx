@@ -23,7 +23,9 @@ export const BidFeed = ({ bids, startingBid }: BidFeedProps) => {
         </div>
       ) : (
         <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-          {bids.map((bid, index) => {
+          {bids
+            .filter((bid): bid is IBid => Boolean(bid && typeof bid === 'object' && bid.id))
+            .map((bid, index) => {
             const isHighest = index === 0;
             return (
               <div

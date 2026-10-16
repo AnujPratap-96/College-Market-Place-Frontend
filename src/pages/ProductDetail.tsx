@@ -98,25 +98,57 @@ const ProductDetail = () => {
 
     const handleNewBid = (data: {
       auctionId: string;
-      bid: IBid;
-      currentBid: number;
-      currentBidder: any;
+      bid?: IBid;
+      bidId?: string;
+      amount?: number;
+      bidder?: any;
+      currentBid?: number;
+      currentBidder?: any;
+      currentBidderId?: string;
       endTime?: string;
       status?: string;
     }) => {
       if (data.auctionId === auction.id) {
-        setAuction((prev) =>
-          prev
+        setAuction((prev) => {
+          if (!prev) return null;
+          const fallbackBid: IBid | null = data.bid
+            ? data.bid
+            : data.bidId
             ? {
-                ...prev,
-                currentBid: data.currentBid,
-                currentBidder: data.currentBidder,
-                endTime: data.endTime || prev.endTime,
-                status: (data.status as any) || prev.status,
-                bids: [data.bid, ...(prev.bids || [])],
+                id: data.bidId,
+                auctionId: data.auctionId,
+                bidderId: data.bidder?.id || data.currentBidderId || "",
+                amount: data.amount ?? data.currentBid ?? 0,
+                isWinning: true,
+                bidder: data.bidder || data.currentBidder || {
+                  id: data.currentBidderId || "",
+                  name: "Bidder",
+                },
+                createdAt: new Date().toISOString(),
               }
-            : null
-        );
+            : null;
+
+          const existingBids = (prev.bids || []).filter(
+            (b): b is IBid => Boolean(b && typeof b === "object" && b.id)
+          );
+          const updatedBids = fallbackBid
+            ? [fallbackBid, ...existingBids.filter((b) => b.id !== fallbackBid.id)]
+            : existingBids;
+
+          return {
+            ...prev,
+            currentBid: data.currentBid ?? (fallbackBid ? fallbackBid.amount : prev.currentBid),
+            currentBidder: data.currentBidder || data.bidder || prev.currentBidder,
+            currentBidderId:
+              data.currentBidderId ||
+              data.bidder?.id ||
+              (data.currentBidder as any)?.id ||
+              prev.currentBidderId,
+            endTime: data.endTime || prev.endTime,
+            status: (data.status as any) || prev.status,
+            bids: updatedBids,
+          };
+        });
       }
     };
 
@@ -644,6 +676,11 @@ const ProductDetail = () => {
                       Auction Ended
                     </Button>
                   )
+                ) : user && auction?.currentBidderId === user.id ? (
+                  <div className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-semibold rounded-xl flex-1 text-sm shadow-sm">
+                    <Trophy className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>You hold the highest bid (₹{auction?.currentBid?.toFixed(2) ?? '0.00'})</span>
+                  </div>
                 ) : (
                   <Button
                     size="lg"
