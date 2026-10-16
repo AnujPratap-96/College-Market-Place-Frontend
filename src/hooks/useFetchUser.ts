@@ -28,7 +28,9 @@ const useFetchUser = () => {
       }));
       return true;
     } catch (error: any) {
-      if (error?.response?.status !== 401) {
+      if (error?.response?.status === 401) {
+        localStorage.removeItem("authToken");
+      } else {
         console.error("Failed to fetch user:", error);
       }
       return false;

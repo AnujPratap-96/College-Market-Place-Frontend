@@ -61,6 +61,9 @@ const LoginForm = () => {
     try {
       const response = await Axios.post("/user/login", data);
       if (response.status === 200) {
+        if (response.data?.token) {
+          localStorage.setItem("authToken", response.data.token);
+        }
         const success = await fetchUser();
         toast.success("Welcome back! Logged in successfully.");
         if (success) navigate("/dashboard");
@@ -147,6 +150,9 @@ const LoginForm = () => {
       });
 
       if (response.status === 200) {
+        if (response.data?.token) {
+          localStorage.setItem("authToken", response.data.token);
+        }
         const success = await fetchUser();
         toast.success("Welcome back! Logged in successfully.");
         if (success) navigate("/dashboard");

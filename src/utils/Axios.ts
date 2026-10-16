@@ -8,11 +8,16 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
+  const authToken =
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("token");
   const flowToken =
     localStorage.getItem("signupToken") ||
     localStorage.getItem("resetToken");
-  if (flowToken && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${flowToken}`;
+
+  const token = authToken || flowToken;
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -28,6 +33,18 @@ axiosInstance.interceptors.response.use(
     ) {
       Object.assign(response.data, response.data.data);
     }
+
+    if (response.data?.token && typeof response.data.token === "string") {
+      const url = response.config.url || "";
+      if (
+        url.includes("/user/login") ||
+        url.includes("/user/verify-login-otp") ||
+        url.includes("/user/complete-signup")
+      ) {
+        localStorage.setItem("authToken", response.data.token);
+      }
+    }
+
     return response;
   },
   (error) => {
