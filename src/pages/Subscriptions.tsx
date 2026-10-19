@@ -65,8 +65,10 @@ export const Subscriptions = () => {
     if (subRes.subscriptions) {
       setSubscriptions(subRes.subscriptions);
     }
+    if (holRes.dates) {
+      setHolidays(holRes.dates);
+    }
     if (manifestRes.manifest) {
-    if (holRes.dates) setHolidays(holRes.dates);
       setManifest(manifestRes.manifest);
     }
 

@@ -71,7 +71,7 @@ export const SellerAnalytics = () => {
             Refresh
           </Button>
           <Button asChild size="sm" className="rounded-xl h-9 text-xs bg-orange-500 hover:bg-orange-600 text-white font-semibold">
-            <Link to="/dashboard/create">
+            <Link to="/dashboard/products/create">
               <Sparkles className="w-3.5 h-3.5 mr-1" />
               New Listing
             </Link>

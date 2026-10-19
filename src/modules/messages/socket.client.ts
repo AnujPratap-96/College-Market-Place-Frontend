@@ -17,8 +17,14 @@ export const getSocket = (): Socket | null => {
     socket.disconnect();
   }
 
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('authToken') || localStorage.getItem('token')
+      : null;
+
   socket = io(targetUrl, {
     withCredentials: true,
+    auth: { token },
     transports: ['websocket', 'polling'],
     autoConnect: true,
   });

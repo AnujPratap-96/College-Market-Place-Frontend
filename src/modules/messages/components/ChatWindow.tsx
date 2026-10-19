@@ -144,8 +144,8 @@ export const ChatWindow = ({
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image size exceeds 10MB limit.');
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size exceeds 5MB limit.');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
