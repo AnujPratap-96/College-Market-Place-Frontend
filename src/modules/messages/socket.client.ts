@@ -9,22 +9,16 @@ export const getSocket = (): Socket | null => {
 
   const targetUrl =
     import.meta.env.VITE_SOCKET_URL ||
-    (import.meta.env.VITE_API_BASE_URL
+    (import.meta.env.VITE_API_BASE_URL && import.meta.env.VITE_API_BASE_URL.startsWith('http')
       ? new URL(import.meta.env.VITE_API_BASE_URL).origin
-      : 'http://localhost:5000');
+      : undefined);
 
   if (socket) {
     socket.disconnect();
   }
 
-  const token =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('authToken') || localStorage.getItem('token')
-      : null;
-
   socket = io(targetUrl, {
     withCredentials: true,
-    auth: { token },
     transports: ['websocket', 'polling'],
     autoConnect: true,
   });

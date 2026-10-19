@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -8,16 +8,13 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const authToken =
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("token");
+  // Temporary flow tokens for multi-step signup/reset procedures only
   const flowToken =
     localStorage.getItem("signupToken") ||
     localStorage.getItem("resetToken");
 
-  const token = authToken || flowToken;
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (flowToken && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${flowToken}`;
   }
   return config;
 });
@@ -32,17 +29,6 @@ axiosInstance.interceptors.response.use(
       !Array.isArray(response.data.data)
     ) {
       Object.assign(response.data, response.data.data);
-    }
-
-    if (response.data?.token && typeof response.data.token === "string") {
-      const url = response.config.url || "";
-      if (
-        url.includes("/user/login") ||
-        url.includes("/user/verify-login-otp") ||
-        url.includes("/user/complete-signup")
-      ) {
-        localStorage.setItem("authToken", response.data.token);
-      }
     }
 
     return response;
